@@ -5,7 +5,7 @@
 import { Provider } from "react-redux";
 import store from "../../redux/store";
 
-//import Navbar from "../../components/estudianteNavbar";
+//import Sidebar from "../../components/estudianteSidebar";
 //import Footer from "../../components/Footer";
 
 
@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <Provider store={store}>
-          {/* <Navbar /> */}
+          {/* <Sidebar /> */}
           {children}
         </Provider>
       </body>
