@@ -1,0 +1,1 @@
+//Modulo que contendra el listado de las materias del estudiante, asi como detalles, como aula, horario y %asistencias
