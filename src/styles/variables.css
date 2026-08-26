@@ -3,6 +3,11 @@
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
 
+    /* Para la sidebar */
+    --sidebar: #0f172a;
+    --sidebar-text: #94a3b8;
+    --sidebar-active: #2563eb;
+
     --background: #f5f7fa;
     --card: #ffffff;
 
@@ -10,12 +15,19 @@
     --text-secondary: #64748b;
     --text-light: #94a3b8;
 
-    /* Colores para los bordes */
     --border: #e2e8f0;
     --border-light: #edf1f5;
 
-    /* Colores para las alertas */
+    /* Para mensajes, alertas y graficas */
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
+
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.page-body{
+    display:flex;
+    margin:0;
 }

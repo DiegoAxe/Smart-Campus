@@ -5,8 +5,12 @@
 import { Provider } from "react-redux";
 import store from "../../redux/store";
 
-//import Sidebar from "../../components/estudianteSidebar";
+import "../../styles/variables.css";
+
+import Sidebar from "../../components/estudianteSidebar";
 //import Footer from "../../components/Footer";
+
+
 
 
 export default function RootLayout({
@@ -16,9 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>
+      <body className="page-body">
         <Provider store={store}>
-          {/* <Sidebar /> */}
+          <Sidebar />
           {children}
         </Provider>
       </body>
