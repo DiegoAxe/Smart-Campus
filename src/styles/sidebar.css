@@ -1,0 +1,101 @@
+.estudiante-sidebar {
+    width: 20vw;
+    min-width: 115px;
+    min-height: 100vh;
+    background: var(--sidebar);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 0px 8px;
+    position: fixed;
+}
+
+/* Sidebar header*/
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 20px 5px 20px 10px;
+    margin-bottom: 10px;
+}
+
+.sidebar-header-text h1 {
+    font-size: 20px;
+    margin: 0;
+}
+
+.sidebar-header-text h3 {
+    font-size: 14px;
+    margin-top:5px;
+    color: var(--text-secondary);
+}
+
+.sidebar-header img{
+    width: 25%;
+    margin-right: 10px;
+}
+
+/* Sidebar links */
+
+.sidebar-links{
+    width: 80%;
+    display:flex;
+    margin-bottom:10px;
+    align-items: center;
+    margin-left: 10px;
+    border-radius: 10px;
+    padding: 10px 15px;
+    text-decoration: none;
+}
+
+.sidebar-links span{
+    width: 30px;
+    padding: 0px 5px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-links p{
+    font-size: 18px;
+    margin: 0;
+    color: var(--sidebar-text);
+}
+
+.sidebar-links:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+}
+
+.sidebar-links.active {
+    background: var(--sidebar-active);
+}
+.sidebar-links.active p, .sidebar-links.active span {
+    background: var(--sidebar-active);
+    color: white;
+}
+
+/* Para el footer del sidebar */
+
+.sidebar-footer{
+    display: flex;
+    align-items: center;
+    padding: 10px 20px 10px 20px;
+    margin-top: auto;
+}
+
+.sidebar-footer-text h1 {
+    font-size: 20px;
+    margin: 0;
+    margin-top: 10px;
+}
+
+.sidebar-footer-text h3 {
+    font-size: 16px;
+    margin-top: 5px;
+    color: var(--text-secondary);
+}
+
+.sidebar-footer img{
+    width: 25%;
+    margin-right: 15px;
+    border-radius: 100px;
+}

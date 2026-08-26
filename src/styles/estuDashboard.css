@@ -1,0 +1,199 @@
+*{
+    margin: 0;
+}
+.container {
+    height: 100%; 
+    width: 80%; 
+    background-color: var(--background);
+    padding-left: 20%;  /*Para que no lo tape la sidebar*/
+}
+
+/*Header*/
+
+.dashboard-header{
+    background-color: var(--card);
+    border-bottom: solid 2px var(--border);
+    padding: 15px 0 15px 35px;
+}
+
+.dashboard-header h1{
+    color: var(--text-light);
+    font-size: 18px;
+}
+
+.dashboard-header span{
+    color: var(--text);
+}
+
+/*Bienvenida*/
+
+.bienvenida{
+    padding: 20px 35px;
+}
+.bienvenida h3{
+    color: var(--text-secondary);
+}
+
+/*Las 4 cartas del resumen*/
+
+.resumen-content{
+    display: flex;
+    margin-left: 35px;
+}
+
+.asistencias-card{
+    display:flex;
+}
+
+.dashboard-card{
+    border: solid 2px var(--border);
+    background-color: var(--card);
+    padding: 15px 25px;
+    border-radius: 10px;
+}
+
+.dashboard-card p{
+    color: var(--text-secondary);
+}
+
+.grafico-card{
+    width: 35%;
+}
+
+.resumen-card{
+    width: 55%;
+    margin-right: 20px;
+}
+
+.clases-card{
+    width: 40%;
+    margin-right: 15px;
+}
+.asistenciasGlobal-card{
+    width: 40%;
+}
+
+.inasistencias-card{
+    margin-top: 10px;
+}
+
+.estado-inasistencia{
+    display: flex;
+}
+
+.estado-inasistencia h1{
+    width: 75%;
+    text-align: left;
+}
+
+.estado-inasistencia h2{
+    text-align: right;
+    font-size: 16px;
+    border-radius: 10px;
+
+}
+
+/* Segun el estado*/
+.estado {
+    padding: 10px 10px 10px 10px;
+}
+
+.critico {
+    color: var(--danger);
+    background-color: rgba(255, 0, 0, 0.2);
+}
+
+.presente {
+    color: var(--success);
+    background-color: rgba(0, 255, 0, 0.2);
+}
+.tardanza{
+    color: var(--warning);
+    background-color: rgba(255, 255, 0, 0.2);
+}
+
+/*Para el historial reciente*/
+.historial-content{
+    margin: 20px 0px 20px 35px;
+    width: 95%;
+    border-radius: 6px;
+}
+
+.historial-table{
+    width: 100%;
+    text-align: center;
+    color: var(--text);
+    background-color: var(--card);
+    border-collapse: collapse;
+    overflow: hidden;
+    table-layout: fixed;
+    border: solid 2px var(--border) ;
+    margin-top: 10px;
+}
+
+.historial-table th {
+    height: 25px;
+    background: var(--background);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.historial-table td {
+    height: 27px;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.historial-table td{
+    border-bottom: solid 2px var(--border) ;
+    border-top: solid 2px var(--border) ;
+}
+.historial- tbody tr {
+    transition: background 0.15s ease;
+}
+
+.historial-table tbody tr:hover {
+    background: var(--sidebar-active);
+    color: white;
+}
+
+/*Seccion mis materias*/
+.materias-content{
+    width: 95%;
+    margin-left: 35px;
+}
+
+.materias-grid { 
+    display: grid; 
+    grid-template-columns: 
+    repeat(2, 1fr); 
+    gap: 10px; 
+    margin-top: 15px;
+}
+
+.materias-card{
+    border: solid 2px var(--border);
+    background-color: var(--card);
+    padding: 15px 25px;
+    border-radius: 10px;
+}
+.materias-card h3{
+    color: var(--text-secondary);
+}
+
+/*Footer*/
+
+.dashboard-footer{
+    background-color: var(--card);
+    border-top: solid 2px var(--border);
+    padding: 15px 0 15px 35px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.dashboard-footer h1{
+    color: var(--text);
+    font-size: 18px;
+}
