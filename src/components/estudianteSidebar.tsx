@@ -23,6 +23,7 @@ export default function estudianteSidebar() {
                 <span className="icono-link material-symbols-outlined">dashboard</span>
                 <p>Dashboard</p>  
             </Link>
+            {/* 
             <Link href="/portalEstudiante/Materias" className={pathname === "/portalEstudiante/Materias" ? "sidebar-links active" : "sidebar-links"}>
                 <span className="icono-link material-symbols-outlined">import_contacts</span>
                 <p>Materias</p>
@@ -35,6 +36,7 @@ export default function estudianteSidebar() {
                 <span className="icono-link material-symbols-outlined">network_intelligence</span>
                 <p>IA Insights</p>
             </Link>
+            */}
 
             <div className="sidebar-footer">
                 {/* Esta es la parte complicada, pq debe de recibir la info de la api, tanto nombre, foto, y tipo de usuario */}
