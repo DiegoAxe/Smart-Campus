@@ -2,6 +2,18 @@
 "use client"; 
 
 import "../styles/estuDashboard.css";
+import { getAsistenciasporCarnet } from "../services/api";
+
+const cargarAsistencias = async () => {
+  try {
+    //-----------CORREGIR PARA QUE FUNCIONE EN BASE A LA VARIABLE DE SESION, 
+    const asistencias = await getAsistenciasporCarnet("ML222767");
+
+    console.log(asistencias);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 export default function estudianteDashboard() {
     return (
