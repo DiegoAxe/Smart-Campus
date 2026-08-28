@@ -3,7 +3,8 @@ const router = express.Router();
 const {
   registrarAsistencia,
   obtenerAsistenciasPorSesion,
-  obtenerHistorialEstudiante
+  obtenerHistorialEstudiante,
+  obtenerResumenEstudiante
 } = require('../controllers/asistencias.controller');
 
 // Ruta para marcar/registrar asistencia (POST)
@@ -14,5 +15,8 @@ router.get('/sesion/:id_sesion', obtenerAsistenciasPorSesion);
 
 // Ruta para consultar el historial de un alumno (GET)
 router.get('/estudiante/:id_estudiante', obtenerHistorialEstudiante);
+
+// Ruta para consultar el resumen de asistencias de un alumno (GET)
+router.get('/estudiante/:id_estudiante/resumen', obtenerResumenEstudiante);
 
 module.exports = router;

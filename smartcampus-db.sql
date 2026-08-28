@@ -10,6 +10,7 @@ CREATE TABLE Profesores (
     id_profesor VARCHAR(20) PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
+    contraseña VARCHAR(255) NOT NULL,
     correo_institucional VARCHAR(150) NOT NULL UNIQUE,
     departamento_facultad VARCHAR(100)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -19,6 +20,7 @@ CREATE TABLE Estudiantes (
     id_estudiante VARCHAR(20) PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
+    contraseña VARCHAR(255) NOT NULL,
     correo_institucional VARCHAR(150) NOT NULL UNIQUE,
     codigo_qr VARCHAR(255) UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

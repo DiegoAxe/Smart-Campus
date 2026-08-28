@@ -99,21 +99,37 @@ const obtenerAsistenciasPorSesion = async (req, res) => {
 const obtenerHistorialEstudiante = async (req, res) => {
   const { id_estudiante } = req.params;
 
+  if (!id_estudiante) {
+    return res.status(400).json({ error: 'Se requiere el carnet del estudiante' });
+  }
+
   try {
+    const [estudiantes] = await db.query(
+      'SELECT id_estudiante FROM Estudiantes WHERE id_estudiante = ?',
+      [id_estudiante]
+    );
+
+    if (estudiantes.length === 0) {
+      return res.status(404).json({ error: 'El estudiante no fue encontrado' });
+    }
+
     const query = `
       SELECT 
         a.id_asistencia,
         s.fecha,
+        a.hora_marca,
         m.nombre_materia,
         g.numero_grupo,
+        NULL AS aula,
         a.estado_asistencia,
-        a.hora_marca
+        a.metodo_registro
       FROM Asistencias a
       INNER JOIN Sesiones s ON a.id_sesion = s.id_sesion
       INNER JOIN Grupos g ON s.id_grupo = g.id_grupo
       INNER JOIN Materias m ON g.id_materia = m.id_materia
       WHERE a.id_estudiante = ?
-      ORDER BY s.fecha DESC, a.hora_marca DESC
+      ORDER BY s.fecha DESC, a.hora_marca DESC, a.id_asistencia DESC
+      LIMIT 5
     `;
 
     const [filas] = await db.query(query, [id_estudiante]);
@@ -125,8 +141,54 @@ const obtenerHistorialEstudiante = async (req, res) => {
   }
 };
 
+// 4. Obtener el resumen de asistencias de un estudiante
+const obtenerResumenEstudiante = async (req, res) => {
+  const { id_estudiante } = req.params;
+
+  if (!id_estudiante) {
+    return res.status(400).json({ error: 'Se requiere el carnet del estudiante' });
+  }
+
+  try {
+    const [estudiantes] = await db.query(
+      'SELECT id_estudiante FROM Estudiantes WHERE id_estudiante = ?',
+      [id_estudiante]
+    );
+
+    if (estudiantes.length === 0) {
+      return res.status(404).json({ error: 'El estudiante no fue encontrado' });
+    }
+
+    const query = `
+      SELECT
+        COUNT(*) AS asistencias_totales,
+        COUNT(CASE WHEN estado_asistencia = 'Presente' THEN 1 END) AS presentes,
+        COUNT(CASE WHEN estado_asistencia = 'Llegada Tarde' THEN 1 END) AS tardanzas,
+        COUNT(CASE WHEN estado_asistencia = 'Ausente' THEN 1 END) AS ausentes,
+        COUNT(CASE WHEN estado_asistencia = 'Permiso' THEN 1 END) AS permisos
+      FROM Asistencias
+      WHERE id_estudiante = ?
+    `;
+
+    const [filas] = await db.query(query, [id_estudiante]);
+    const resumen = filas[0];
+
+    return res.json({
+      asistencias_totales: Number(resumen.asistencias_totales),
+      presentes: Number(resumen.presentes),
+      tardanzas: Number(resumen.tardanzas),
+      ausentes: Number(resumen.ausentes),
+      permisos: Number(resumen.permisos)
+    });
+  } catch (error) {
+    console.error('Error al obtener resumen de asistencias:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 module.exports = {
   registrarAsistencia,
   obtenerAsistenciasPorSesion,
-  obtenerHistorialEstudiante
+  obtenerHistorialEstudiante,
+  obtenerResumenEstudiante
 };
