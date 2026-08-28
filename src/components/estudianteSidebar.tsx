@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 import "../styles/sidebar.css";
 
-export default function estudianteSidebar() {
+export default function EstudianteSidebar() {
     const pathname = usePathname();
 
     return (
