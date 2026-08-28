@@ -10,7 +10,6 @@ CREATE TABLE Profesores (
     id_profesor VARCHAR(20) PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
-    contraseña VARCHAR(255) NOT NULL,
     correo_institucional VARCHAR(150) NOT NULL UNIQUE,
     departamento_facultad VARCHAR(100)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -20,7 +19,6 @@ CREATE TABLE Estudiantes (
     id_estudiante VARCHAR(20) PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
-    contraseña VARCHAR(255) NOT NULL,
     correo_institucional VARCHAR(150) NOT NULL UNIQUE,
     codigo_qr VARCHAR(255) UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -63,13 +61,10 @@ CREATE TABLE Sesiones (
     fecha DATE NOT NULL,
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
-    id_aula VARCHAR(20) NULL,
     estado ENUM('Programada', 'Finalizada', 'Cancelada') DEFAULT 'Programada',
     token_qr VARCHAR(255) NULL,
     CONSTRAINT fk_sesion_grupo FOREIGN KEY (id_grupo) 
-        REFERENCES Grupos(id_grupo) ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_sesion_aula FOREIGN KEY (id_aula)
-        REFERENCES Aulas(id_aula) ON UPDATE CASCADE ON DELETE RESTRICT
+        REFERENCES Grupos(id_grupo) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla Asistencias
@@ -85,34 +80,4 @@ CREATE TABLE Asistencias (
     CONSTRAINT fk_asistencia_estudiante FOREIGN KEY (id_estudiante) 
         REFERENCES Estudiantes(id_estudiante) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT uq_asistencia_sesion_estudiante UNIQUE (id_sesion, id_estudiante)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Aulas físicas y dispositivos IoT asociados
-CREATE TABLE Aulas (
-    id_aula VARCHAR(20) PRIMARY KEY,
-    nombre_aula VARCHAR(100) NOT NULL,
-    activo BOOLEAN DEFAULT TRUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE Dispositivos (
-    id_dispositivo VARCHAR(50) PRIMARY KEY,
-    id_aula VARCHAR(20) NOT NULL,
-    api_key_hash CHAR(64) NOT NULL,
-    activo BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (id_aula) REFERENCES Aulas(id_aula) ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Horario semanal que permite identificar automáticamente el grupo
-CREATE TABLE Horarios (
-    id_horario INT AUTO_INCREMENT PRIMARY KEY,
-    id_grupo VARCHAR(20) NOT NULL,
-    id_aula VARCHAR(20) NOT NULL,
-    dia_semana TINYINT NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fin TIME NOT NULL,
-    activo BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (id_grupo) REFERENCES Grupos(id_grupo) ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (id_aula) REFERENCES Aulas(id_aula) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT chk_dia_semana CHECK (dia_semana BETWEEN 1 AND 7),
-    CONSTRAINT chk_horas_horario CHECK (hora_inicio < hora_fin)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
