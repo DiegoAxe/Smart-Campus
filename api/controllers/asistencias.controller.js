@@ -237,5 +237,6 @@ const obtenerHistorialEstudiante = async (req, res) => {
 module.exports = {
   registrarAsistencia,
   obtenerAsistenciasPorSesion,
-  obtenerHistorialEstudiante
+  obtenerHistorialEstudiante,
+  registrarAsistenciaDesdeDispositivo
 };
