@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, 'datos.env') });
 
 const asistenciasRoutes = require('./routes/asistencias.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -12,6 +14,7 @@ app.use(express.json());
 
 // Montar las rutas
 app.use('/api/asistencias', asistenciasRoutes);
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

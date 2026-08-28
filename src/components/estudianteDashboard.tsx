@@ -1,6 +1,7 @@
 // Modulo que contendra el resumen academico de las asistencias y el historial reciente del Estudiante
 "use client"; 
 
+import { useEffect, useState } from "react";
 import "../styles/estuDashboard.css";
 import { getAsistenciasporCarnet } from "../services/api";
 
@@ -15,7 +16,68 @@ const cargarAsistencias = async () => {
   }
 };
 
-export default function estudianteDashboard() {
+type Asistencia = {
+    id_asistencia: number;
+    fecha: string;
+    hora_marca: string;
+    nombre_materia: string;
+    nombre_aula: string | null;
+    estado_asistencia: "Presente" | "Ausente" | "Llegada Tarde" | "Permiso";
+};
+
+type Usuario = {
+    id_usuario: string;
+    nombres: string;
+    apellidos: string;
+    correo_institucional: string;
+    rol: "estudiante" | "profesor";
+    departamento_facultad: string | null;
+};
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+const claseEstado = (estado: Asistencia["estado_asistencia"]) => {
+    if (estado === "Llegada Tarde") return "tardanza";
+    if (estado === "Presente") return "presente";
+    return "critico";
+};
+
+export default function EstudianteDashboard() {
+    const [asistencias, setAsistencias] = useState<Asistencia[]>([]);
+    const [cargandoHistorial, setCargandoHistorial] = useState(true);
+    const [errorHistorial, setErrorHistorial] = useState("");
+    const [usuario] = useState<Usuario | null>(() => {
+        if (typeof window === "undefined") return null;
+        const usuarioGuardado = window.localStorage.getItem("usuario");
+        if (!usuarioGuardado) return null;
+        try {
+            return JSON.parse(usuarioGuardado) as Usuario;
+        } catch {
+            window.localStorage.removeItem("usuario");
+            return null;
+        }
+    });
+
+    useEffect(() => {
+        const idEstudiante = window.localStorage.getItem("id_estudiante");
+        if (!idEstudiante) {
+            window.setTimeout(() => {
+                setErrorHistorial("No hay un estudiante autenticado.");
+                setCargandoHistorial(false);
+            }, 0);
+            return;
+        }
+
+        fetch(`${apiUrl}/api/asistencias/estudiante/${encodeURIComponent(idEstudiante)}`)
+            .then(async (respuesta) => {
+                if (!respuesta.ok) throw new Error("No se pudo cargar el historial.");
+                return respuesta.json() as Promise<Asistencia[]>;
+            })
+            .then(setAsistencias)
+            .catch((error: Error) => setErrorHistorial(error.message))
+            .finally(() => setCargandoHistorial(false));
+    }, []);
+
     return (
         <div className="container">
             <div className="estudiante-dashboard">
@@ -25,8 +87,11 @@ export default function estudianteDashboard() {
 
                 {/* Esta tambien necesita api + detectar horario local */}
                 <div className="bienvenida">
-                    <h1> ¡Hola, [Nombre User]!</h1>
-                    <h3> [Fecha Actual] • Resumen academico de asistencia</h3>
+                    <h1> ¡Hola, {usuario ? `${usuario.nombres} ${usuario.apellidos}` : "estudiante"}!</h1>
+                    <h3>
+                        {usuario?.correo_institucional ?? ""} • {usuario?.id_usuario ?? ""} • {usuario?.rol ?? "estudiante"}
+                        <br />Resumen academico de asistencia
+                    </h3>
                 </div>
 
                 <div className="resumen-content">
@@ -79,22 +144,26 @@ export default function estudianteDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Lunes 24 Agosto, 2026</td>
-                                    <td>9:05 AM</td>
-                                    <td>Cálculo Integral</td>
-                                    <td>Aula A-201</td>
-                                    {/*Esta deberia de tener una clase que haga facil el darle el color, con la api */}
-                                    <td className="estado presente"> Presente</td>
-                                </tr>
-                                <tr>
-                                    <td>Martes 25 Agosto, 2026</td>
-                                    <td>5:20 PM</td>
-                                    <td>Analisis de Circuitos</td>
-                                    <td>Aula C-321</td>
-                                    {/*Esta deberia de tener una clase que haga facil el darle el color, con la api */}
-                                    <td className="estado tardanza"> Tardanza</td>
-                                </tr>
+                                {cargandoHistorial && <tr><td colSpan={5}>Cargando historial...</td></tr>}
+                                {errorHistorial && <tr><td colSpan={5}>{errorHistorial}</td></tr>}
+                                {!cargandoHistorial && !errorHistorial && asistencias.length === 0 && (
+                                    <tr><td colSpan={5}>No hay asistencias registradas.</td></tr>
+                                )}
+                                {asistencias.map((asistencia) => (
+                                    <tr key={asistencia.id_asistencia}>
+                                        <td>{new Date(`${asistencia.fecha}T00:00:00`).toLocaleDateString("es-SV", {
+                                            weekday: "long", day: "numeric", month: "long", year: "numeric"
+                                        })}</td>
+                                        <td>{new Date(asistencia.hora_marca).toLocaleTimeString("es-SV", {
+                                            hour: "numeric", minute: "2-digit"
+                                        })}</td>
+                                        <td>{asistencia.nombre_materia}</td>
+                                        <td>{asistencia.nombre_aula ?? "Sin aula"}</td>
+                                        <td className={`estado ${claseEstado(asistencia.estado_asistencia)}`}>
+                                            {asistencia.estado_asistencia}
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                             
                         </table>
