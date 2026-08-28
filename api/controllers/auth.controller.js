@@ -28,7 +28,7 @@ const iniciarSesion = async (req, res) => {
     `, [valorUsuario, valorUsuario, contraseña, valorUsuario, valorUsuario, contraseña]);
 
     if (usuarios.length === 0) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({ error: 'Usuario no encontrado' });
     }
 
     return res.json({ usuario: usuarios[0] });
