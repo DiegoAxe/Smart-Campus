@@ -4,7 +4,8 @@ const {
   registrarAsistencia,
   obtenerAsistenciasPorSesion,
   obtenerHistorialEstudiante,
-  obtenerResumenEstudiante
+  obtenerResumenEstudiante,
+  obtenerMateriasResumen
 } = require('../controllers/asistencias.controller');
 
 // Ruta para marcar/registrar asistencia (POST)
@@ -18,5 +19,8 @@ router.get('/estudiante/:id_estudiante', obtenerHistorialEstudiante);
 
 // Ruta para consultar el resumen de asistencias de un alumno (GET)
 router.get('/estudiante/:id_estudiante/resumen', obtenerResumenEstudiante);
+
+// Ruta para consultar el resumen de materias de un alumno (GET)
+router.get('/estudiante/:id_estudiante/materias', obtenerMateriasResumen);
 
 module.exports = router;

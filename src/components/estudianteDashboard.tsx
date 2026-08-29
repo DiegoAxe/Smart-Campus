@@ -1,21 +1,100 @@
 // Modulo que contendra el resumen academico de las asistencias y el historial reciente del Estudiante
 "use client"; 
 
+import { Cell, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Legend} from "recharts";
+import { estudianteAsistencias } from "../types/estudianteAsistencias";
+import { estudianteResumen } from "../types/estudianteResumen";
+import { materiasResumen } from "../types/materiasResumen";
 import "../styles/estuDashboard.css";
-import { getAsistenciasporCarnet } from "../services/api";
-
-const cargarAsistencias = async () => {
-  try {
-    //-----------CORREGIR PARA QUE FUNCIONE EN BASE A LA VARIABLE DE SESION, 
-    const asistencias = await getAsistenciasporCarnet("ML222767");
-
-    console.log(asistencias);
-  } catch (error) {
-    console.error(error);
-  }
-};
+import { getAsistenciasporCarnet, getEstudianteResumen, getMateriasResumen } from "../services/api";
+import { formatearFecha, formatearHora, ordenarHora } from "../redux/formatearFecha";
+import { useState, useEffect } from "react";
 
 export default function estudianteDashboard() {
+
+    const userCarnet = "ML222767";
+    const userName = "Diego Martinez";
+
+    //Fecha Actual
+    const fechaActual = new Date();
+
+    //Setters de los objetos obtenidos de la api
+    const [asistencias, setAsistencias] = useState<estudianteAsistencias[]>([]);
+    const [resumen, setResumen] = useState<estudianteResumen | null>(null);
+    const [materias, setMaterias] = useState<materiasResumen[]>([]);
+
+    //Datos para la grafica de pastel
+    const datosPastel = [
+        {
+            nombre: "Presentes", cantidad: resumen?.presentes ?? 0
+        },
+        {
+            nombre: "Permisos", cantidad: resumen?.permisos ?? 0
+        },
+        {
+            nombre: "Tardanzas", cantidad: resumen?.tardanzas ?? 0
+        },
+        {
+            nombre: "Ausencias", cantidad: resumen?.ausentes ?? 0
+        }
+    ];
+    //Funcion para el label del grafico pastel muestre un %
+    const renderLabel = ({
+        name,
+        percent
+    }: {
+        name?: string;
+        percent?: number;
+    }) => {
+        return `${name} ${((percent ?? 0) * 100).toFixed(0)}%`;
+    };
+
+    //Cargar el resumen de las asistencias
+    useEffect(() => {
+        const cargarResumen = async () => {
+            try {
+                const resumenA = await getEstudianteResumen(userCarnet);
+
+                setResumen(resumenA);
+                
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        cargarResumen();
+    }, []);
+
+    //Cargar las asistencias para la tabla del historial
+    useEffect(() => {
+        const cargarAsistencias = async () => {
+            try {
+                const asistencias = await getAsistenciasporCarnet(userCarnet);
+
+                setAsistencias(asistencias);
+                
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        cargarAsistencias();
+    }, []);
+
+    //Cargar las asistencias para los apartados de materias
+    useEffect(() => {
+        const cargarMaterias = async () => {
+            try {
+                const materiasA = await getMateriasResumen(userCarnet);
+
+                setMaterias(materiasA);
+                
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        cargarMaterias();
+    }, []);
+
+
     return (
         <div className="container">
             <div className="estudiante-dashboard">
@@ -25,49 +104,64 @@ export default function estudianteDashboard() {
 
                 {/* Esta tambien necesita api + detectar horario local */}
                 <div className="bienvenida">
-                    <h1> ¡Hola, [Nombre User]!</h1>
-                    <h3> [Fecha Actual] • Resumen academico de asistencia</h3>
+                    <h1> ¡Hola, {userName}!</h1>
+                    <h3> {formatearFecha(fechaActual)} • Resumen academico de asistencia</h3>
                 </div>
 
                 <div className="resumen-content">
                     <div className="resumen-card">
                         <div className="asistencias-card">
                             <div className="dashboard-card clases-card">
-                                <h3> Clases Totales</h3>
+                                <h3> Clases Totales </h3>
                                 {/*Info de cada clase, asistida o no */}
-                                <h1> 64</h1>
+                                <h1> {resumen?.asistencias_totales}</h1>
                                 <p> Registradas en el ciclo</p>
                             </div>
                             <div className="dashboard-card asistenciasGlobal-card">
                                 <h3> Asistencia Global</h3>
                                 {/* % de las asistencias totales */}
-                                <h1>85%</h1>
+                                <h1>{((resumen?.asistencias_totales -  resumen?.ausentes)/resumen?.asistencias_totales) * 100}%</h1>
                                 <p>Porcentaje de asistencia total</p>
                             </div>
                         </div>
                         <div className="dashboard-card inasistencias-card">
-                            <h3> Inasistencias Permitidas</h3>
+                            <h3> Permisos concedidos </h3>
                             {/* Info de las inasistencias, y el estado debe variar, segun la api */}
                             <div className="estado-inasistencia">
-                              <h1> 3   </h1>       
-                              <h2 className="estado critico">Limite Critico</h2>
+                              <h1> {resumen?.permisos}   </h1>       
+                              <h2 className="estado Permiso">Permisos Usados</h2>
                             </div>
-                            <p> Antes de incurrir en desercion automatica</p>
+                            <p> Recuerda que solo se aceptan por motivos de salud o fuerza mayor.</p>
                         </div>
                     </div>
                     <div className="dashboard-card grafico-card">
                         <h3> Distribución Global</h3>
-                        {/* Aqui va el grafico y su legado*/}
-                        FALTA LA GRAFICA DE PASTEL
+                        
+                        <ResponsiveContainer width="100%" height={210}>
+                            <PieChart>
+                                <Pie data={datosPastel} dataKey="cantidad" nameKey="nombre"
+                                    cx="50%" cy="50%" innerRadius={25} outerRadius={65} 
+                                    label={renderLabel}>
+                                    <Cell fill="#10b981" />
+                                    <Cell fill="#3b82f6" />
+                                    <Cell fill="#f59e0b" />
+                                    <Cell fill="#ef4444" />
+                                </Pie>
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+
                     </div>
                 </div>
 
                 <div className="historial-content">
                     <h1> Historial Reciente</h1>
                     <div className="historial-div">
-                        {/* Aqui va el historial de las ultimas 5 clases, de nuevo, con la api, 
-                        aunque si hay menos, debe de validar, lo mejor es hacer que escriba todos los registros que recibe,
-                        pero limitar los registros enviados, gracias a la peticion sql (por ejemplo, usando top 5) */}
+
+                        {asistencias.length === 0 ? (
+                            <p className="sinRegistros">No hay asistencias registradas.</p>
+                        ) : (
                         <table className="historial-table">
                             <thead>
                                 <tr>
@@ -79,49 +173,69 @@ export default function estudianteDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Lunes 24 Agosto, 2026</td>
-                                    <td>9:05 AM</td>
-                                    <td>Cálculo Integral</td>
-                                    <td>Aula A-201</td>
-                                    {/*Esta deberia de tener una clase que haga facil el darle el color, con la api */}
-                                    <td className="estado presente"> Presente</td>
+                                {asistencias.map((asistencia) => (        
+                                <tr key={asistencia.id_asistencia}>
+                                    <td>{formatearFecha(asistencia.fecha)}</td>
+                                    <td>{formatearHora(asistencia.hora_marca)}</td>
+                                    <td>{asistencia.nombre_materia}</td>
+                                    <td>{asistencia.aula}</td>
+                                    <td className={asistencia.estado_asistencia}>{asistencia.estado_asistencia}</td>
                                 </tr>
-                                <tr>
-                                    <td>Martes 25 Agosto, 2026</td>
-                                    <td>5:20 PM</td>
-                                    <td>Analisis de Circuitos</td>
-                                    <td>Aula C-321</td>
-                                    {/*Esta deberia de tener una clase que haga facil el darle el color, con la api */}
-                                    <td className="estado tardanza"> Tardanza</td>
-                                </tr>
+                                ))}
                             </tbody>
                             
                         </table>
+                            )}
                     </div>
                 </div>
 
-                <div className="materias-content">
-                    <h1> Mis Materias</h1>
-                    <div className="materias-grid">
-                        {/**Esto deberia de tener algo que segun la cantidad de materias detecte, cree X cards, eso    
-                        * sim mencionar claro, la informacion que debe de contener, en parejas*/}
-                        <div className="materias-card">
-                            <h1> [Nombre Materia]</h1>
-                            <h3> [Horario de Clase] • [Aula Asignada]</h3>
-                            FALTAN LAS BARRAS
-                            {/**Grafico de barra de asistencias, de 3 colores, con porcentajes y " x de y faltas" */}
-                        </div>
-                        <div className="materias-card">
-                            <h1> Calculo</h1>
-                            <h3> Mar-Jue 11:00 AM • Aula A-301</h3>
-                            {/**Grafico de barra de asistencias, de 3 colores, con porcentajes y " x de y faltas" */}
-                        </div>
-                        <div className="materias-card">
-                            <h1> Fisica</h1>
-                            <h3> Lunes 9:00 AM • Aula B-321</h3>
-                            {/**Grafico de barra de asistencias, de 3 colores, con porcentajes y " x de y faltas" */}
-                        </div>
+                        <div className="materias-content">
+                            <h1> Mis Materias</h1>
+                            <div className="materias-grid">
+                                 {materias.length === 0 ? (
+                                    <p className="sinRegistros">No hay materias inscritas.</p>
+                                ) : materias.map((materia) => {
+
+
+                            const porcentajeBarra = materia.total_sesiones > 0 ? Math.round(((materia.total_sesiones - 
+                                                    materia.cantidad_inasistencias)/materia.total_sesiones)*100) : 0;
+                            
+                                let estadoBarra = "";
+                            if(porcentajeBarra >= 75){
+                                estadoBarra = "barraVerde";
+                            } else if (porcentajeBarra >= 50){
+                                estadoBarra = "barraAmarillo"
+                            }else{
+                                estadoBarra = "barraRojo"
+                            }
+
+                            return (
+                                <div key={materia.materia} className="materias-card">
+                                    <h1> {materia.materia}</h1>
+                                    <h3> {materia.dias_semana} {ordenarHora(materia.hora_inicio)} 
+                                        &nbsp;&nbsp;  •  &nbsp; Aula {materia.aula}</h3>
+
+                                    <div className="barra-progreso">
+
+                                        <div className="barra-progreso-fondo">
+                                        <div
+                                            className={`barra-progreso-relleno ${estadoBarra}`}
+                                            style={{ width: `${porcentajeBarra}%` }}/>
+                                    </div>
+                                    <span className={`porcentaje ${estadoBarra}`}>
+                                            {porcentajeBarra}%
+                                        </span>
+                                </div>
+                                <p className= "texto_barra_porcentaje"> {materia.total_sesiones - 
+                                    materia.cantidad_inasistencias} de {materia.total_sesiones}
+                                    </p>
+                                </div>
+                            );
+                        })}
+
+
+
+                
                     </div>
                 </div>
 

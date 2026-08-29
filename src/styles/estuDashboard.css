@@ -5,6 +5,9 @@
     height: 100%; 
     width: 80%; 
     background-color: var(--background);
+    z-index: -5;
+    position: fixed;
+    overflow-y: auto;
     padding-left: 20%;  /*Para que no lo tape la sidebar*/
 }
 
@@ -23,6 +26,7 @@
 
 .dashboard-header span{
     color: var(--text);
+    
 }
 
 /*Bienvenida*/
@@ -32,6 +36,7 @@
 }
 .bienvenida h3{
     color: var(--text-secondary);
+    margin-top: 10px;
 }
 
 /*Las 4 cartas del resumen*/
@@ -82,7 +87,7 @@
 }
 
 .estado-inasistencia h1{
-    width: 75%;
+    width: 65%;
     text-align: left;
 }
 
@@ -98,18 +103,22 @@
     padding: 10px 10px 10px 10px;
 }
 
-.critico {
+.Ausente {
     color: var(--danger);
     background-color: rgba(255, 0, 0, 0.2);
 }
 
-.presente {
+.Presente{
     color: var(--success);
     background-color: rgba(0, 255, 0, 0.2);
 }
-.tardanza{
+.Tardanza{
     color: var(--warning);
     background-color: rgba(255, 255, 0, 0.2);
+}
+.Permiso{
+    color: var(--neutral);
+    background-color: rgba(0, 0, 255, 0.2);
 }
 
 /*Para el historial reciente*/
@@ -126,7 +135,6 @@
     background-color: var(--card);
     border-collapse: collapse;
     overflow: hidden;
-    table-layout: fixed;
     border: solid 2px var(--border) ;
     margin-top: 10px;
 }
@@ -159,6 +167,11 @@
     color: white;
 }
 
+.sinRegistros{
+    text-align: center;
+    font-size: 16px;
+}
+
 /*Seccion mis materias*/
 .materias-content{
     width: 95%;
@@ -179,7 +192,14 @@
     padding: 15px 25px;
     border-radius: 10px;
 }
+
+.materias-card h1{
+    font-size: 20px;
+}
+
 .materias-card h3{
+    margin-top: 5px;
+    margin-bottom: 10px;
     color: var(--text-secondary);
 }
 
@@ -197,3 +217,55 @@
     color: var(--text);
     font-size: 18px;
 }
+
+
+/* Para la barra de porcentajes en las materias */
+.barra-progreso {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.barra-progreso-fondo {
+    width: 300px;
+    height: 12px;
+    background-color: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.barra-progreso-relleno {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.barra-progreso-fondo .barraVerde {
+    background-color: var(--success);
+}
+.barra-progreso-fondo .barraAmarillo {
+    background-color: var(--warning);
+}
+.barra-progreso-fondo .barraRojo {
+    background-color: var(--danger);
+}
+.barraVerde{
+    color: var(--success);
+}
+.barraAmarillo{
+    color: var(--warning);
+}
+.barraRojo{
+    color: var(--danger);
+}
+
+.porcentaje {
+    font-weight: bold;
+}
+
+.texto_barra_porcentaje{
+    color: var(--text-secondary);
+    text-align: right;
+    font-weight: bold;
+}
+

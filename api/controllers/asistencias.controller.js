@@ -114,13 +114,13 @@ const obtenerHistorialEstudiante = async (req, res) => {
     }
 
     const query = `
-      SELECT 
+      SELECT
         a.id_asistencia,
         s.fecha,
         a.hora_marca,
         m.nombre_materia,
         g.numero_grupo,
-        NULL AS aula,
+        g.aula,
         a.estado_asistencia,
         a.metodo_registro
       FROM Asistencias a
@@ -163,7 +163,7 @@ const obtenerResumenEstudiante = async (req, res) => {
       SELECT
         COUNT(*) AS asistencias_totales,
         COUNT(CASE WHEN estado_asistencia = 'Presente' THEN 1 END) AS presentes,
-        COUNT(CASE WHEN estado_asistencia = 'Llegada Tarde' THEN 1 END) AS tardanzas,
+        COUNT(CASE WHEN estado_asistencia = 'Tardanza' THEN 1 END) AS tardanzas,
         COUNT(CASE WHEN estado_asistencia = 'Ausente' THEN 1 END) AS ausentes,
         COUNT(CASE WHEN estado_asistencia = 'Permiso' THEN 1 END) AS permisos
       FROM Asistencias
@@ -186,9 +186,81 @@ const obtenerResumenEstudiante = async (req, res) => {
   }
 };
 
+// 5. Obtener informacion de las asistencias por materia de un estudiante
+const obtenerMateriasResumen = async (req, res) => {
+  const { id_estudiante } = req.params;
+
+  if (!id_estudiante) {
+    return res.status(400).json({ error: 'Se requiere el carnet del estudiante' });
+  }
+
+  try {
+    const [estudiantes] = await db.query(
+      'SELECT id_estudiante FROM Estudiantes WHERE id_estudiante = ?',
+      [id_estudiante]
+    );
+
+    if (estudiantes.length === 0) {
+      return res.status(404).json({ error: 'El estudiante no fue encontrado' });
+    }
+
+    const query = `
+      SELECT
+        m.nombre_materia AS materia,
+        g.numero_grupo AS grupo,
+        CONCAT(e.nombres, ' ', e.apellidos) AS estudiante,
+
+        GROUP_CONCAT(
+          DISTINCT CASE DAYOFWEEK(s.fecha)
+            WHEN 1 THEN 'Domingo'
+            WHEN 2 THEN 'Lunes'
+            WHEN 3 THEN 'Martes'
+            WHEN 4 THEN 'Miércoles'
+            WHEN 5 THEN 'Jueves'
+            WHEN 6 THEN 'Viernes'
+            WHEN 7 THEN 'Sábado'
+          END
+          ORDER BY DAYOFWEEK(s.fecha) SEPARATOR '-'
+        ) AS dias_semana,
+
+        s.hora_inicio AS hora_inicio,
+        g.aula AS aula,
+        COUNT(a.id_asistencia) AS total_sesiones,
+        SUM(
+          CASE
+          WHEN a.estado_asistencia = 'Ausente' THEN 1
+          ELSE 0
+         END
+        ) AS cantidad_inasistencias
+
+      FROM Estudiantes e
+      INNER JOIN Inscripciones i ON e.id_estudiante = i.id_estudiante
+      INNER JOIN Grupos g ON i.id_grupo = g.id_grupo
+      INNER JOIN Materias m ON g.id_materia = m.id_materia
+      INNER JOIN Sesiones s ON g.id_grupo = s.id_grupo
+      LEFT JOIN Asistencias a ON s.id_sesion = a.id_sesion AND a.id_estudiante = e.id_estudiante
+
+      WHERE e.id_estudiante = ?
+
+      GROUP BY
+          e.id_estudiante, e.nombres, e.apellidos, g.id_grupo,
+          g.numero_grupo, m.nombre_materia, g.aula
+      ORDER BY m.nombre_materia
+      `;
+
+    const [filas] = await db.query(query, [id_estudiante]);
+    return res.json(filas);
+
+  } catch (error) {
+    console.error('Error al obtener resumen de materias:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 module.exports = {
   registrarAsistencia,
   obtenerAsistenciasPorSesion,
   obtenerHistorialEstudiante,
-  obtenerResumenEstudiante
+  obtenerResumenEstudiante,
+  obtenerMateriasResumen
 };

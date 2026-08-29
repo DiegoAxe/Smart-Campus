@@ -38,6 +38,7 @@ CREATE TABLE Grupos (
     id_profesor VARCHAR(20) NOT NULL,
     numero_grupo VARCHAR(10) NOT NULL,
     ciclo_academico VARCHAR(20) NOT NULL,
+    aula VARCHAR(25) NOT NULL,
     CONSTRAINT fk_grupo_materia FOREIGN KEY (id_materia) 
         REFERENCES Materias(id_materia) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_grupo_profesor FOREIGN KEY (id_profesor) 
@@ -74,7 +75,7 @@ CREATE TABLE Asistencias (
     id_asistencia INT AUTO_INCREMENT PRIMARY KEY,
     id_sesion INT NOT NULL,
     id_estudiante VARCHAR(20) NOT NULL,
-    estado_asistencia ENUM('Presente', 'Ausente', 'Llegada Tarde', 'Permiso') DEFAULT 'Presente',
+    estado_asistencia ENUM('Presente', 'Ausente', 'Tardanza', 'Permiso') DEFAULT 'Presente',
     hora_marca DATETIME DEFAULT CURRENT_TIMESTAMP,
     metodo_registro VARCHAR(50) DEFAULT 'QR',
     CONSTRAINT fk_asistencia_sesion FOREIGN KEY (id_sesion) 

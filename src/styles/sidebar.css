@@ -1,6 +1,5 @@
 .estudiante-sidebar {
     width: 20vw;
-    min-width: 115px;
     min-height: 100vh;
     background: var(--sidebar);
     color: white;
