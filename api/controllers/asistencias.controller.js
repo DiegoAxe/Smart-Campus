@@ -83,12 +83,19 @@ const procesoLogin = async (req, res) => {
     try {
       // 1. Buscar si es un Docente
       const [profesores] = await db.query(
-          `SELECT id_profesor, nombres, apellidos, correo_institucional, departamento_facultad
-            FROM profesores WHERE correo_institucional = ? AND contraseña = ?`,
-            [texto_correo, contrasena]    );
+          `SELECT id_profesor, nombres, apellidos, correo_institucional, departamento_facultad, contraseña
+            FROM profesores WHERE correo_institucional = ?`,
+            [texto_correo]    );
 
             if (profesores.length > 0) {
               const profesor = profesores[0];
+
+              if(profesor.contraseña != contrasena){
+                return res.status(401).json({
+                  success: false,
+                  mensaje: "Contraseña incorrecta"
+              });
+              }
 
               return res.json({
                   success: true,
@@ -105,12 +112,19 @@ const procesoLogin = async (req, res) => {
         
           // 2. Si no existe como profesor, buscar en Estudiantes
           const [estudiantes] = await db.query(
-              `SELECT id_estudiante, nombres, apellidos, correo_institucional
-              FROM estudiantes WHERE correo_institucional = ? AND contraseña = ?`,
-            [texto_correo, contrasena]    );
+              `SELECT id_estudiante, nombres, apellidos, correo_institucional, contraseña
+              FROM estudiantes WHERE correo_institucional = ?`,
+            [texto_correo]    );
 
           if (estudiantes.length > 0) {
               const estudiante = estudiantes[0];
+
+              if(estudiante.contraseña != contrasena){
+                return res.status(401).json({
+                  success: false,
+                  mensaje: "Contraseña incorrecta"
+              });
+              }
 
               return res.json({
                   success: true,
@@ -135,7 +149,7 @@ const procesoLogin = async (req, res) => {
         console.error(error);
         res.status(500).json({
             success: false,
-            mensaje: "Error interno del servidor ME vengo"
+            mensaje: "Error interno del servidor"
         });
     }
 
@@ -144,12 +158,19 @@ const procesoLogin = async (req, res) => {
     try {
       // 1. Buscar si es un Docente
       const [profesores] = await db.query(
-          `SELECT id_profesor, nombres, apellidos, correo_institucional, departamento_facultad
-            FROM profesores WHERE id_profesor = ? AND contraseña = ?`,
-            [texto_correo, contrasena]    );
+          `SELECT id_profesor, nombres, apellidos, correo_institucional, departamento_facultad, contraseña
+            FROM profesores WHERE id_profesor = ?`,
+            [texto_correo]    );
 
             if (profesores.length > 0) {
               const profesor = profesores[0];
+
+              if(profesor.contraseña != contrasena){
+                return res.status(401).json({
+                  success: false,
+                  mensaje: "Contraseña incorrecta"
+              });
+              }
 
               return res.json({
                   success: true,
@@ -166,12 +187,19 @@ const procesoLogin = async (req, res) => {
         
           // 2. Si no existe como profesor, buscar en Estudiantes
           const [estudiantes] = await db.query(
-              `SELECT id_estudiante, nombres, apellidos, correo_institucional
-              FROM estudiantes WHERE id_estudiante = ? AND contraseña = ?`,
-            [texto_correo, contrasena]    );
+              `SELECT id_estudiante, nombres, apellidos, correo_institucional, contraseña
+              FROM estudiantes WHERE id_estudiante = ?`,
+            [texto_correo]    );
 
           if (estudiantes.length > 0) {
               const estudiante = estudiantes[0];
+
+              if(estudiante.contraseña != contrasena){
+                return res.status(401).json({
+                  success: false,
+                  mensaje: "Contraseña incorrecta"
+              });
+              }
 
               return res.json({
                   success: true,
