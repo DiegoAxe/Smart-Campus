@@ -1,11 +1,11 @@
 Repositorio dedicado a DPS Teorico, proyecto de catedra de 2026: "Smart Campus".
 
 Integrantes:
-- 
-- 
-- 
-- 
-- 
+Beltran Martínez, Josué Daniel. BM242082
+Castro Castro, Jefferson Alexis. CC222749
+Gonzalez Gonzalez, Alison Valeria. GG220710
+Martínez Lemus, Diego Ariel. ML222767
+Rodríguez Gómez, Rodrigo Raul. RG220673
 
 
 Instrucciones de Instalacion y Despliegue
