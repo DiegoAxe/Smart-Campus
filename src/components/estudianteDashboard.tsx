@@ -148,7 +148,7 @@ export default function estudianteDashboard() {
                     <div className="dashboard-card grafico-card">
                         <h3> Distribución Global</h3>
                         
-                        <ResponsiveContainer width="100%" height={210}>
+                        <ResponsiveContainer width="100%" height={230}>
                             <PieChart>
                                 <Pie data={datosPastel} dataKey="cantidad" nameKey="nombre"
                                     cx="50%" cy="50%" innerRadius={25} outerRadius={65} 
