@@ -10,4 +10,6 @@ export interface Usuario {
 export interface LoginResponse {
   success: boolean;
   usuario?: Usuario | null;
+  mensaje?: string;
+  error?: string;
 }

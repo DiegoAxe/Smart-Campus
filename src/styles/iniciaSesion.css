@@ -214,6 +214,44 @@
     cursor: not-allowed;
 }
 
+/* Mensaje de error / respuesta del servidor */
+.mensajeErrorLogin {
+    margin-top: 15px;
+    padding: 10px 14px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #dc2626;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+.mensajeErrorLogin .errorIcon {
+    font-size: 20px;
+    color: #ef4444;
+    flex-shrink: 0;
+}
+
+.mensajeErrorLogin p {
+    margin: 0;
+    line-height: 1.3;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /*Intento de responsive*/
 
 @media (max-width: 500px) {

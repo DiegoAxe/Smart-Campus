@@ -14,23 +14,28 @@ export default function IniciaSesion() {
 
     const [texto_correo, setTexto_Correo] = useState(""); 
     const [contrasena, setContrasena] = useState("");
+    const [errorMensaje, setErrorMensaje] = useState <string | null>(null);
+    const [cargando, setCargando] = useState(false);
 
     const { iniciarSesion } = useAuth();
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => { 
         e.preventDefault();
+        setErrorMensaje(null);
+        setCargando(true);
+
         try {
             const dataLogin = await postLogin(texto_correo, contrasena);
 
             // Login incorrecto 
-            if (dataLogin.success === false) { 
-                alert("Carnet/correo o contraseña incorrectos"); 
+            if (dataLogin.success === false || dataLogin.error) { 
+                setErrorMensaje(dataLogin.mensaje || dataLogin.error || "Carnet/correo o contraseña incorrectos"); 
                 return; 
             }
 
             // Login correcto 
-            if (dataLogin.success === true) { 
+            if (dataLogin.success === true && dataLogin.usuario) { 
                 // Crear sesión 
                 iniciarSesion(dataLogin.usuario); 
                 // Redirigir dependiendo del rol 
@@ -41,21 +46,21 @@ export default function IniciaSesion() {
                 } 
             }
             
-        } catch (error) {
+        } catch (error:no) {
             console.error(error);
-            alert("No se pudo conectar con el servidor");
+            const mensaje = error instanceof Error ? error.message : "No se pudo conectar con el servidor";
+            setErrorMensaje(mensaje);
+        } finally {
+            setCargando(false);
         }
+    };
 
-    }
-
-    const verContra = ():void => {
-        const tipo = document.getElementById("password");
-        if(tipo.type == "password"){
-            tipo.type = "text";
-        }else{
-            tipo.type = "password";
+    const verContra = (): void => {
+        const tipo = document.getElementById("password") as HTMLInputElement | null;
+        if (tipo) {
+            tipo.type = tipo.type === "password" ? "text" : "password";
         }
-    }
+    };
 
     return (
         <div className="containerA">
@@ -74,13 +79,19 @@ export default function IniciaSesion() {
                     <div className="inputContainer">
                         <span className="material-symbols-outlined icon"> person </span>
                         <input className="form-input" type="text" placeholder="ej. RG210145" value={texto_correo} 
-                        onChange={(e) => setTexto_Correo(e.target.value)} required/>
+                        onChange={(e) => {
+                            setTexto_Correo(e.target.value);
+                            if (errorMensaje) setErrorMensaje(null);
+                        }} required/>
                     </div>
                     <p className="inputLabel">Contraseña:</p>
                     <div className="inputContainer">
                         <span className="material-symbols-outlined icon"> lock </span>
                         <input className="form-input password-input" id="password" type="password" value={contrasena}
-                        placeholder="••••••••••••"  onChange={(e) => setContrasena(e.target.value)} required/>
+                        placeholder="••••••••••••" onChange={(e) => {
+                            setContrasena(e.target.value);
+                            if (errorMensaje) setErrorMensaje(null);
+                        }} required/>
                         <div className="password-toggle-container">
                             <button className="password-toggle" type="button" onClick={verContra}>
                                 <span className="material-symbols-outlined"> visibility </span>
@@ -98,7 +109,16 @@ export default function IniciaSesion() {
                     </div>
                 </div>
                 
-                <button className="btnSesion" type="submit">Iniciar Sesión</button>
+                <button className="btnSesion" type="submit" disabled={cargando}>
+                    {cargando ? "Iniciando sesión..." : "Iniciar Sesión"}
+                </button>
+
+                {errorMensaje && (
+                    <div className="mensajeErrorLogin">
+                        <span className="material-symbols-outlined errorIcon">error</span>
+                        <p>{errorMensaje}</p>
+                    </div>
+                )}
                 </form>
             </div>  
         </div>
