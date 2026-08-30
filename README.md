@@ -1,6 +1,7 @@
 Repositorio dedicado a DPS Teorico, proyecto de catedra de 2026: "Smart Campus".
 
 Integrantes:
+
 Beltran Martínez, Josué Daniel. BM242082
 
 Castro Castro, Jefferson Alexis. CC222749
