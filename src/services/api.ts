@@ -1,5 +1,7 @@
 const API_URL = "http://localhost:3001/api";
 
+import type { LoginResponse } from "../types/usuario";
+
 export async function getAsistenciasporCarnet(
   id_estudiante: string
 ) {
@@ -40,4 +42,34 @@ export async function getMateriasResumen(
   }
 
   return response.json();
+}
+
+export async function postLogin(
+  texto_correo: string,
+  contrasena: string
+): Promise<LoginResponse> {
+
+  const response = await fetch( `${API_URL}/asistencias/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      texto_correo,
+      contrasena
+    })
+  });
+  const data = await response.json();
+
+  // Credenciales incorrectas
+  if (response.status === 401) {
+    return data;
+  }
+
+  // Otros errores del servidor
+  if (!response.ok) {
+    throw new Error("Error del servidor");
+  }
+
+  return data;
 }

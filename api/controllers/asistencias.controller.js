@@ -65,7 +65,145 @@ const registrarAsistencia = async (req, res) => {
   }
 };
 
-// 2. Obtener todas las asistencias de una sesión específica
+// 2. Obtener el resumen de asistencias de un estudiante
+const procesoLogin = async (req, res) => {
+  const { texto_correo, contrasena } = req.body;
+
+  // Validación de campos requeridos
+  if (!texto_correo || !contrasena) {
+    return res.status(400).json({ 
+      error: 'Se requieren el carnet/correo y la contraseña' 
+    });
+  }
+
+  // Dara "true" si contiene un "@"
+  const esCorreo = texto_correo.includes("@");
+  if (esCorreo == true){
+    /////////////////////// Si es el correo institucional
+    try {
+      // 1. Buscar si es un Docente
+      const [profesores] = await db.query(
+          `SELECT id_profesor, nombres, apellidos, correo_institucional, departamento_facultad
+            FROM profesores WHERE correo_institucional = ? AND contraseña = ?`,
+            [texto_correo, contrasena]    );
+
+            if (profesores.length > 0) {
+              const profesor = profesores[0];
+
+              return res.json({
+                  success: true,
+                  usuario: {
+                      id: profesor.id_profesor,
+                      nombre: profesor.nombres,
+                      apellidos: profesor.apellidos,
+                      correo_institucionale: profesor.correo_institucional,
+                      departamento_facultad: profesor.departamento_facultad,
+                      rol: "Docente"
+                  }
+              });
+            }
+        
+          // 2. Si no existe como profesor, buscar en Estudiantes
+          const [estudiantes] = await db.query(
+              `SELECT id_estudiante, nombres, apellidos, correo_institucional
+              FROM estudiantes WHERE correo_institucional = ? AND contraseña = ?`,
+            [texto_correo, contrasena]    );
+
+          if (estudiantes.length > 0) {
+              const estudiante = estudiantes[0];
+
+              return res.json({
+                  success: true,
+                  usuario: {
+                      id: estudiante.id_estudiante,
+                      nombre: estudiante.nombres,
+                      apellidos: estudiante.apellidos,
+                      correo_institucionale: estudiante.correo_institucional,
+                      departamento_facultad: null,
+                      rol: "Estudiante"
+                  }
+              });
+          }
+
+        // 3. No existe en ninguna tabla
+        return res.status(401).json({
+            success: false,
+            mensaje: "Usuario no encontrado"
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            mensaje: "Error interno del servidor ME vengo"
+        });
+    }
+
+  }else{
+    //////////////////////////// Si es el carnet
+    try {
+      // 1. Buscar si es un Docente
+      const [profesores] = await db.query(
+          `SELECT id_profesor, nombres, apellidos, correo_institucional, departamento_facultad
+            FROM profesores WHERE id_profesor = ? AND contraseña = ?`,
+            [texto_correo, contrasena]    );
+
+            if (profesores.length > 0) {
+              const profesor = profesores[0];
+
+              return res.json({
+                  success: true,
+                  usuario: {
+                      id: profesor.id_profesor,
+                      nombre: profesor.nombres,
+                      apellidos: profesor.apellidos,
+                      correo_institucionale: profesor.correo_institucional,
+                      departamento_facultad: profesor.departamento_facultad,
+                      rol: "Docente"
+                  }
+              });
+            }
+        
+          // 2. Si no existe como profesor, buscar en Estudiantes
+          const [estudiantes] = await db.query(
+              `SELECT id_estudiante, nombres, apellidos, correo_institucional
+              FROM estudiantes WHERE id_estudiante = ? AND contraseña = ?`,
+            [texto_correo, contrasena]    );
+
+          if (estudiantes.length > 0) {
+              const estudiante = estudiantes[0];
+
+              return res.json({
+                  success: true,
+                  usuario: {
+                      id: estudiante.id_estudiante,
+                      nombre: estudiante.nombres,
+                      apellidos: estudiante.apellidos,
+                      correo_institucionale: estudiante.correo_institucional,
+                      departamento_facultad: null,
+                      rol: "Estudiante"
+                  }
+              });
+          }
+
+        // 3. No existe en ninguna tabla
+        return res.status(401).json({
+            success: false,
+            mensaje: "Usuario no encontrado"
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            mensaje: "Error interno del servidor"
+        });
+    }
+
+  }
+};
+
+// 3. Obtener todas las asistencias de una sesión específica
 const obtenerAsistenciasPorSesion = async (req, res) => {
   const { id_sesion } = req.params;
 
@@ -95,7 +233,7 @@ const obtenerAsistenciasPorSesion = async (req, res) => {
   }
 };
 
-// 3. Obtener el historial de asistencias de un estudiante
+// 4. Obtener el historial de asistencias de un estudiante
 const obtenerHistorialEstudiante = async (req, res) => {
   const { id_estudiante } = req.params;
 
@@ -141,7 +279,7 @@ const obtenerHistorialEstudiante = async (req, res) => {
   }
 };
 
-// 4. Obtener el resumen de asistencias de un estudiante
+// 5. Obtener el resumen de asistencias de un estudiante
 const obtenerResumenEstudiante = async (req, res) => {
   const { id_estudiante } = req.params;
 
@@ -186,7 +324,7 @@ const obtenerResumenEstudiante = async (req, res) => {
   }
 };
 
-// 5. Obtener informacion de las asistencias por materia de un estudiante
+// 6. Obtener informacion de las asistencias por materia de un estudiante
 const obtenerMateriasResumen = async (req, res) => {
   const { id_estudiante } = req.params;
 
@@ -257,8 +395,11 @@ const obtenerMateriasResumen = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   registrarAsistencia,
+  procesoLogin,
   obtenerAsistenciasPorSesion,
   obtenerHistorialEstudiante,
   obtenerResumenEstudiante,

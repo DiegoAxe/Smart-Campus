@@ -2,7 +2,20 @@
 
 import "../../styles/portalDocente.css";
 
+import { useAuth } from "../../context/AuthContext";
+import { usePathname, useRouter } from "next/navigation";
+
 export default function PortalDocente() {
+    //Variables utilizadas para navegar entre paginas y las variables de sesion
+    const { usuario } = useAuth();
+    const router = useRouter();
+    const { cerrarSesion } = useAuth();
+
+    const handleLogout = () => {
+        cerrarSesion();
+        router.push("/");
+    };
+
     return (
         <div className="docente-container">
 
@@ -43,6 +56,11 @@ export default function PortalDocente() {
                     <button className="menu-item">
                         <span>📊</span>
                         Reportes
+                    </button>
+                    <div className="link-separador"></div>
+                    <button type="button" className="sidebar-logout" onClick={handleLogout}>
+                        <span className="material-symbols-outlined"> logout </span>
+                        <p>Cerrar sesión</p>
                     </button>
 
                 </nav>

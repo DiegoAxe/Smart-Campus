@@ -1,14 +1,16 @@
 *{
-    margin: 0;
+    margin:0;
 }
 .container {
-    height: 100%; 
-    width: 80%; 
-    background-color: var(--background);
-    z-index: -5;
     position: fixed;
+    top: 0;
+    right: 0;
+    width: 80vw;
+    height: 100vh;
+    box-sizing: border-box;
+    background-color: var(--background);
     overflow-y: auto;
-    padding-left: 20%;  /*Para que no lo tape la sidebar*/
+    z-index: 1;
 }
 
 /*Header*/

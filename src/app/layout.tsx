@@ -2,20 +2,23 @@
 
 "use client";
 
-import { Provider } from "react-redux";
-import store from "../redux/store";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // El link es para acceder a ciertos iconos, sin necesidad de descargarlos
   return (
     <html lang="es">
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+      </head>
       <body>
-        <Provider store={store}>
+        <AuthProvider>
           {children}
-        </Provider>
+        </AuthProvider>
       </body>
     </html>
   );

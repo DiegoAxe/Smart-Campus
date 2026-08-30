@@ -447,3 +447,47 @@
         margin: 25px 20px;
     }
 }
+
+/* Para el Logout*/
+.link-separador {
+    width: 90%;
+    height: 1px;
+    border-top: 1px solid var(--border);
+    margin: 10px auto;
+}
+.sidebar-logout {
+    width: 90%;
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--sidebar-text);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.sidebar-logout span {
+    width: 30px;
+    padding: 0 5px;
+}
+
+.sidebar-logout p {
+    margin: 0;
+    font-size: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-logout:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.sidebar-logout:hover p,
+.sidebar-logout:hover span {
+    color: white;
+}

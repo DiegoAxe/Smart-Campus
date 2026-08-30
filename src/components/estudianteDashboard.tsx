@@ -1,7 +1,8 @@
 // Modulo que contendra el resumen academico de las asistencias y el historial reciente del Estudiante
 "use client"; 
 
-import { Cell, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Legend} from "recharts";
+import { useAuth } from "../context/AuthContext";
+import { Cell, Bar, Tooltip, ResponsiveContainer, PieChart, Pie, Legend} from "recharts";
 import { estudianteAsistencias } from "../types/estudianteAsistencias";
 import { estudianteResumen } from "../types/estudianteResumen";
 import { materiasResumen } from "../types/materiasResumen";
@@ -12,8 +13,9 @@ import { useState, useEffect } from "react";
 
 export default function estudianteDashboard() {
 
-    const userCarnet = "ML222767";
-    const userName = "Diego Martinez";
+    const { usuario } = useAuth();
+    const userCarnet = usuario?.id;
+    const userName = usuario?.nombre + " " + usuario?.apellidos;
 
     //Fecha Actual
     const fechaActual = new Date();
@@ -50,6 +52,7 @@ export default function estudianteDashboard() {
     };
 
     //Cargar el resumen de las asistencias
+    
     useEffect(() => {
         const cargarResumen = async () => {
             try {
@@ -61,8 +64,10 @@ export default function estudianteDashboard() {
                 console.error(error);
             }
         };
-        cargarResumen();
-    }, []);
+        if (userCarnet) {
+            cargarResumen();
+        }
+    }, [userCarnet]);
 
     //Cargar las asistencias para la tabla del historial
     useEffect(() => {
@@ -76,8 +81,10 @@ export default function estudianteDashboard() {
                 console.error(error);
             }
         };
-        cargarAsistencias();
-    }, []);
+        if (userCarnet) {
+            cargarAsistencias();
+        }
+    }, [userCarnet]);
 
     //Cargar las asistencias para los apartados de materias
     useEffect(() => {
@@ -91,8 +98,10 @@ export default function estudianteDashboard() {
                 console.error(error);
             }
         };
-        cargarMaterias();
-    }, []);
+        if (userCarnet) {
+            cargarMaterias();
+        }
+    }, [userCarnet]);
 
 
     return (
@@ -120,7 +129,9 @@ export default function estudianteDashboard() {
                             <div className="dashboard-card asistenciasGlobal-card">
                                 <h3> Asistencia Global</h3>
                                 {/* % de las asistencias totales */}
-                                <h1>{((resumen?.asistencias_totales -  resumen?.ausentes)/resumen?.asistencias_totales) * 100}%</h1>
+                                <h1>{resumen && resumen.asistencias_totales > 0? Math.round(
+                                        ((resumen.asistencias_totales - resumen.ausentes) /
+                                        resumen.asistencias_totales) * 100): 0}% </h1>
                                 <p>Porcentaje de asistencia total</p>
                             </div>
                         </div>

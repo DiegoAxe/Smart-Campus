@@ -2,16 +2,25 @@
 "use client"; 
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
+import { usePathname, useRouter } from "next/navigation";
 
 import "../styles/sidebar.css";
 
 export default function estudianteSidebar() {
+    //Variables utilizadas para navegar entre paginas y las variables de sesion
     const pathname = usePathname();
+    const { usuario } = useAuth();
+    const router = useRouter();
+    const { cerrarSesion } = useAuth();
+
+    const handleLogout = () => {
+        cerrarSesion();
+        router.push("/");
+    };
 
     return (
         <nav className="estudiante-sidebar">
-            <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
             <div className="sidebar-header">
                 <img src="UDB logo.png" alt="Logo UDB" className="logoUDB" />
                 <div className="sidebar-header-text">
@@ -37,13 +46,24 @@ export default function estudianteSidebar() {
                 <p>IA Insights</p>
             </Link>
             */}
+            <div className="link-separador"></div>
+            <button type="button" className="sidebar-logout" onClick={handleLogout}>
+                <span className="material-symbols-outlined"> logout </span>
+                <p>Cerrar sesión</p>
+            </button>
+
+            
 
             <div className="sidebar-footer">
-                {/* Esta es la parte complicada, pq debe de recibir la info de la api, tanto nombre, foto, y tipo de usuario */}
-                <img src="file.svg" alt="Foto de Perfil" className="fotoPerfil" />
+                
+                {/*<img src="file.svg" alt="Foto de Perfil" className="fotoPerfil" /> */}
+
+                <div className="user-circle">
+                    <span className="material-symbols-outlined"> account_circle </span>
+                </div>
                 <div className="sidebar-footer-text">
-                    <h1>Nombre User</h1>
-                    <h3>Estudiante</h3>
+                    <h1>{usuario?.apellidos}</h1>
+                    <h3>{usuario?.rol}</h3>
                 </div>
             </div>
         </nav>

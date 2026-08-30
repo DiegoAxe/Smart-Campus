@@ -1,14 +1,18 @@
 .estudiante-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 20vw;
-    min-height: 100vh;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow-y: auto;
     background: var(--sidebar);
     color: white;
     display: flex;
     flex-direction: column;
-    padding: 0px 8px;
-    position: fixed;
+    padding: 0 8px;
+    z-index: 1000;
 }
-
 /* Sidebar header*/
 
 .sidebar-header {
@@ -97,4 +101,59 @@
     width: 25%;
     margin-right: 15px;
     border-radius: 100px;
+}
+
+.user-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #2864e8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+/* Para el Logout*/
+.link-separador {
+    width: 90%;
+    height: 1px;
+    border-top: 1px solid var(--border);
+    margin: 10px auto;
+}
+.sidebar-logout {
+    width: 90%;
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--sidebar-text);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.sidebar-logout span {
+    width: 30px;
+    padding: 0 5px;
+}
+
+.sidebar-logout p {
+    margin: 0;
+    font-size: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-logout:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.sidebar-logout:hover p,
+.sidebar-logout:hover span {
+    color: white;
 }
