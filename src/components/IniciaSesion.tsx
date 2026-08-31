@@ -56,7 +56,7 @@ if (dataLogin.usuario) {
     // ==========================================
     // ESTUDIANTE
     // ==========================================
-    if (dataLogin.usuario.rol === "estudiante") {
+    if (dataLogin.usuario.rol === "Estudiante") {
 
         // Guardamos el ID del estudiante
         localStorage.setItem(
@@ -72,7 +72,7 @@ if (dataLogin.usuario) {
     // ==========================================
     // PROFESOR
     // ==========================================
-    else if (dataLogin.usuario.rol === "profesor") {
+    else if (dataLogin.usuario.rol === "Docente") {
 
         // Guardamos el ID del profesor
         localStorage.setItem(
