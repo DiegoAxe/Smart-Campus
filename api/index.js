@@ -4,18 +4,67 @@ require('dotenv').config();
 
 const asistenciasRoutes = require('./routes/asistencias.routes');
 const authRoutes = require('./routes/auth.routes');
+const docenteRoutes = require('./routes/docente.routes');
 
 const app = express();
 
-// Middlewares
+
+// =====================================================
+// MIDDLEWARES
+// =====================================================
+
 app.use(cors());
+
 app.use(express.json());
 
-// Montar las rutas
-app.use('/api/asistencias', asistenciasRoutes);
-app.use('/api/auth', authRoutes);
+app.use(express.urlencoded({
+    extended: true
+}));
 
-const PORT = process.env.PORT || 3000;
+
+// =====================================================
+// RUTAS
+// =====================================================
+
+app.use(
+    '/api/asistencias',
+    asistenciasRoutes
+);
+
+app.use(
+    '/api/auth',
+    authRoutes
+);
+
+app.use(
+    '/api/docente',
+    docenteRoutes
+);
+
+
+// =====================================================
+// RUTA DE PRUEBA
+// =====================================================
+
+app.get('/', (req, res) => {
+
+    res.json({
+        mensaje: 'API Smart Campus funcionando correctamente'
+    });
+
+});
+
+
+// =====================================================
+// SERVIDOR
+// =====================================================
+
+const PORT = 3001;
+
 app.listen(PORT, () => {
-  console.log(`Servidor listo y corriendo en el puerto ${PORT}`);
+
+    console.log(
+        `Servidor listo y corriendo en http://localhost:${PORT}`
+    );
+
 });
