@@ -14,8 +14,13 @@ import { useState, useEffect } from "react";
 export default function estudianteDashboard() {
 
     const { usuario } = useAuth();
+<<<<<<< HEAD
     const userCarnet = usuario?.id ?? "";
     const userName = usuario ? `${usuario.nombre} ${usuario.apellidos}` : "Usuario";
+=======
+    const userCarnet = usuario?.id_usuario;
+    const userName = usuario?.nombres + " " + usuario?.apellidos;
+>>>>>>> 88a92fad81f5cdcfe95f5a99aa05367337d5a5e9
 
     //Fecha Actual
     const fechaActual = new Date();
