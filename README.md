@@ -42,8 +42,10 @@ Ademas, necesitamos ejecutar la api REST que actuara como servidor para nuestro 
 - $ cd api
 - $ node index.js
 
-Con esto, el servidor esta activo, y podemos probarlo en PostMan con:
-- http://localhost:3001/api/asistencias/estudiante/:id_estudiante
+Con esto, el servidor esta activo, y la API queda disponible en:
+- http://localhost:3001/api
+- Login: http://localhost:3001/api/auth/login
+- Asistencias por estudiante: http://localhost:3001/api/asistencias/estudiante/:id_estudiante
 
 Y finalmente ejecutamos el proyecto: 
 - Dado que nuestro servidor esta corriendo en una terminal, debemos de abrir una terminal nueva.

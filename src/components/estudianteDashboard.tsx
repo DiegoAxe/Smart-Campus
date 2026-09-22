@@ -2,10 +2,10 @@
 "use client"; 
 
 import { useAuth } from "../context/AuthContext";
-import { Cell, Bar, Tooltip, ResponsiveContainer, PieChart, Pie, Legend} from "recharts";
-import { estudianteAsistencias } from "../types/estudianteAsistencias";
-import { estudianteResumen } from "../types/estudianteResumen";
-import { materiasResumen } from "../types/materiasResumen";
+import { Cell, Tooltip, ResponsiveContainer, PieChart, Pie, Legend } from "recharts";
+import type { EstudianteAsistencia } from "../types/estudianteAsistencias";
+import type { EstudianteResumen } from "../types/estudianteResumen";
+import type { MateriasResumen } from "../types/materiasResumen";
 import "../styles/estuDashboard.css";
 import { getAsistenciasporCarnet, getEstudianteResumen, getMateriasResumen } from "../services/api";
 import { formatearFecha, formatearHora, ordenarHora } from "../redux/formatearFecha";
@@ -14,16 +14,16 @@ import { useState, useEffect } from "react";
 export default function estudianteDashboard() {
 
     const { usuario } = useAuth();
-    const userCarnet = usuario?.id;
-    const userName = usuario?.nombre + " " + usuario?.apellidos;
+    const userCarnet = usuario?.id ?? "";
+    const userName = usuario ? `${usuario.nombre} ${usuario.apellidos}` : "Usuario";
 
     //Fecha Actual
     const fechaActual = new Date();
 
     //Setters de los objetos obtenidos de la api
-    const [asistencias, setAsistencias] = useState<estudianteAsistencias[]>([]);
-    const [resumen, setResumen] = useState<estudianteResumen | null>(null);
-    const [materias, setMaterias] = useState<materiasResumen[]>([]);
+    const [asistencias, setAsistencias] = useState<EstudianteAsistencia[]>([]);
+    const [resumen, setResumen] = useState<EstudianteResumen | null>(null);
+    const [materias, setMaterias] = useState<MateriasResumen[]>([]);
 
     //Datos para la grafica de pastel
     const datosPastel = [
@@ -208,8 +208,8 @@ export default function estudianteDashboard() {
                                 ) : materias.map((materia) => {
 
 
-                            const porcentajeBarra = materia.total_sesiones > 0 ? Math.round(((materia.total_sesiones - 
-                                                    materia.cantidad_inasistencias)/materia.total_sesiones)*100) : 0;
+                            const ausenciasMateria = Number(materia.cantidad_inasistencias ?? 0);
+                            const porcentajeBarra = materia.total_sesiones > 0 ? Math.round(((materia.total_sesiones - ausenciasMateria) / materia.total_sesiones) * 100) : 0;
                             
                                 let estadoBarra = "";
                             if(porcentajeBarra >= 75){
@@ -237,8 +237,7 @@ export default function estudianteDashboard() {
                                             {porcentajeBarra}%
                                         </span>
                                 </div>
-                                <p className= "texto_barra_porcentaje"> {materia.total_sesiones - 
-                                    materia.cantidad_inasistencias} de {materia.total_sesiones}
+                                <p className= "texto_barra_porcentaje"> {materia.total_sesiones - Number(materia.cantidad_inasistencias ?? 0)} de {materia.total_sesiones}
                                     </p>
                                 </div>
                             );

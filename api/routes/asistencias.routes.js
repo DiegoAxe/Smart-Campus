@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const {
   registrarAsistencia,
-  procesoLogin,
   obtenerAsistenciasPorSesion,
   obtenerHistorialEstudiante,
   obtenerResumenEstudiante,
@@ -11,9 +10,6 @@ const {
 
 // Ruta para marcar/registrar asistencia (POST)
 router.post('/', registrarAsistencia);
-
-// Ruta para hacer el login (POST)
-router.post('/login/', procesoLogin);
 
 // Ruta para obtener la lista de asistencias de una sesión (GET)
 router.get('/sesion/:id_sesion', obtenerAsistenciasPorSesion);

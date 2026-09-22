@@ -49,13 +49,16 @@ export async function postLogin(
   contrasena: string
 ): Promise<LoginResponse> {
 
-  const response = await fetch( `${API_URL}/asistencias/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
+      usuario: texto_correo,
+      identificador: texto_correo,
       texto_correo,
+      contraseña: contrasena,
       contrasena
     })
   });

@@ -46,7 +46,7 @@ export default function IniciaSesion() {
                 } 
             }
             
-        } catch (error:no) {
+        } catch (error: unknown) {
             console.error(error);
             const mensaje = error instanceof Error ? error.message : "No se pudo conectar con el servidor";
             setErrorMensaje(mensaje);

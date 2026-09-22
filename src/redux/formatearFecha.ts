@@ -1,4 +1,4 @@
-export const formatearFecha = (fecha: string) => {
+export const formatearFecha = (fecha: string | Date) => {
   const partes = new Intl.DateTimeFormat("es-SV", {
     timeZone: "America/El_Salvador",
     weekday: "long",

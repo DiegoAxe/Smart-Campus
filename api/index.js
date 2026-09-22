@@ -11,11 +11,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'smart-campus-api' });
+});
+
 // Montar las rutas
 app.use('/api/asistencias', asistenciasRoutes);
 app.use('/api/auth', authRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor listo y corriendo en el puerto ${PORT}`);
 });

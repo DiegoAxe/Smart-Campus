@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect,  type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
-import {Usuario, LoginResponse} from "../types/usuario";
+import type { Usuario } from "../types/usuario";
+
+type AuthContextType = {
+    usuario: Usuario | null;
+    iniciarSesion: (usuario: Usuario) => void;
+    cerrarSesion: () => void;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
