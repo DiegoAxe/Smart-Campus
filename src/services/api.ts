@@ -74,7 +74,6 @@ export async function postLogin(
     contrasena: string
 ): Promise<LoginResponse> {
 
-<<<<<<< HEAD
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
@@ -89,35 +88,6 @@ export async function postLogin(
     })
   });
   const data = await response.json();
-=======
-    const response = await fetch(
-        `${API_URL}/auth/login`,
-        {
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                usuario: texto_correo,
-                contraseña: contrasena
-            })
-        }
-    );
-
-    const data = await response.json();
-
-    if (response.status === 401) {
-        return data;
-    }
-
-    if (!response.ok) {
-        throw new Error(
-            data.error || "Error del servidor"
-        );
-    }
->>>>>>> 88a92fad81f5cdcfe95f5a99aa05367337d5a5e9
 
     return data;
 }

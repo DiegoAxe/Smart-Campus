@@ -1,20 +1,33 @@
 const db = require('../db');
 
+const ESTADOS_ASISTENCIA_PERMITIDOS = ['Presente', 'Ausente', 'Tardanza', 'Permiso'];
+
 // 1. Registrar asistencia de un estudiante
 const registrarAsistencia = async (req, res) => {
-  const { id_sesion, id_estudiante, metodo_registro } = req.body;
+  const {
+    id_sesion,
+    id_estudiante,
+    metodo_registro,
+    estado_asistencia = 'Presente'
+  } = req.body;
 
-  // Validación de campos requeridos
   if (!id_sesion || !id_estudiante) {
-    return res.status(400).json({ 
-      error: 'Se requieren el id_sesion y el id_estudiante' 
+    return res.status(400).json({
+      error: 'Se requieren el id_sesion y el id_estudiante'
+    });
+  }
+
+  if (!ESTADOS_ASISTENCIA_PERMITIDOS.includes(estado_asistencia)) {
+    return res.status(400).json({
+      error: 'El estado de asistencia no es válido'
     });
   }
 
   try {
-    // Verificar si la sesión existe y está activa
     const [sesion] = await db.query(
-      'SELECT estado FROM Sesiones WHERE id_sesion = ?', 
+      `SELECT s.id_sesion, s.estado, s.id_grupo
+       FROM Sesiones s
+       WHERE s.id_sesion = ?`,
       [id_sesion]
     );
 
@@ -23,40 +36,69 @@ const registrarAsistencia = async (req, res) => {
     }
 
     if (sesion[0].estado === 'Finalizada' || sesion[0].estado === 'Cancelada') {
-      return res.status(400).json({ 
-        error: `No se puede registrar asistencia. La sesión está ${sesion[0].estado}` 
+      return res.status(400).json({
+        error: `No se puede registrar asistencia. La sesión está ${sesion[0].estado}`
       });
     }
 
-    // Insertar la asistencia
+    const [inscripcion] = await db.query(
+      `SELECT 1
+       FROM Inscripciones
+       WHERE id_estudiante = ? AND id_grupo = ?`,
+      [id_estudiante, sesion[0].id_grupo]
+    );
+
+    if (inscripcion.length === 0) {
+      return res.status(400).json({
+        error: 'El estudiante no está inscrito en este grupo o sesión'
+      });
+    }
+
+    const [asistenciaExistente] = await db.query(
+      `SELECT id_asistencia
+       FROM Asistencias
+       WHERE id_sesion = ? AND id_estudiante = ?`,
+      [id_sesion, id_estudiante]
+    );
+
+    if (asistenciaExistente.length > 0) {
+      return res.status(409).json({
+        error: 'El estudiante ya tiene asistencia registrada en esta sesión'
+      });
+    }
+
     const queryInsert = `
       INSERT INTO Asistencias (id_sesion, id_estudiante, estado_asistencia, hora_marca, metodo_registro)
-      VALUES (?, ?, 'Presente', NOW(), ?)
+      VALUES (?, ?, ?, NOW(), ?)
     `;
 
     await db.query(queryInsert, [
-      id_sesion, 
-      id_estudiante, 
+      id_sesion,
+      id_estudiante,
+      estado_asistencia,
       metodo_registro || 'QR'
     ]);
 
     return res.status(201).json({
       mensaje: 'Asistencia registrada correctamente',
-      datos: { id_sesion, id_estudiante, hora_marca: new Date() }
+      datos: {
+        id_sesion,
+        id_estudiante,
+        estado_asistencia,
+        hora_marca: new Date()
+      }
     });
 
   } catch (error) {
-    // Código 1062 en MySQL: Violación de índice UNIQUE (asistencia duplicada)
     if (error.errno === 1062) {
-      return res.status(409).json({ 
-        error: 'El estudiante ya tiene asistencia registrada en esta sesión' 
+      return res.status(409).json({
+        error: 'El estudiante ya tiene asistencia registrada en esta sesión'
       });
     }
 
-    // Código 1452 en MySQL: Error de llave foránea (id_estudiante no existe)
     if (error.errno === 1452) {
-      return res.status(404).json({ 
-        error: 'El estudiante ingresado no existe en la base de datos' 
+      return res.status(404).json({
+        error: 'El estudiante ingresado no existe en la base de datos'
       });
     }
 

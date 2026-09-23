@@ -95,8 +95,16 @@ export default function AsistenciasDocente() {
             return;
         }
 
+        const idProfesor = usuario.id_usuario ?? usuario.id ?? usuario.id_profesor ?? "";
+
+        if (!idProfesor) {
+            setError("No se pudo identificar al docente.");
+            setCargando(false);
+            return;
+        }
+
         getDashboardDocente(
-            usuario.id_usuario
+            idProfesor
         )
             .then((data) => {
 
@@ -533,7 +541,7 @@ export default function AsistenciasDocente() {
 
                     <div className="user-circle">
 
-                        {usuario.nombres.charAt(0)}
+                        {(usuario.nombres ?? usuario.nombre ?? "D").charAt(0)}
 
                     </div>
 
@@ -541,7 +549,7 @@ export default function AsistenciasDocente() {
 
                         <strong>
 
-                            {usuario.nombres}{" "}
+                            {(usuario.nombres ?? usuario.nombre ?? "Docente")}{" "}
                             {usuario.apellidos}
 
                         </strong>

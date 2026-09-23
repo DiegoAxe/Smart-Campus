@@ -37,7 +37,15 @@ export default function MateriasDocente() {
             return;
         }
 
-        getDashboardDocente(usuario.id_usuario)
+        const idProfesor = usuario.id_usuario ?? usuario.id ?? usuario.id_profesor ?? "";
+
+        if (!idProfesor) {
+            setError("No se pudo identificar al docente.");
+            setCargando(false);
+            return;
+        }
+
+        getDashboardDocente(idProfesor)
             .then((data) => {
                 setDashboard(data);
             })
@@ -178,13 +186,13 @@ export default function MateriasDocente() {
                 <div className="sidebar-user">
 
                     <div className="user-circle">
-                        {usuario.nombres.charAt(0)}
+                        {(usuario.nombres ?? usuario.nombre ?? "D").charAt(0)}
                     </div>
 
                     <div>
 
                         <strong>
-                            {usuario.nombres} {usuario.apellidos}
+                            {(usuario.nombres ?? usuario.nombre ?? "Docente")} {usuario.apellidos}
                         </strong>
 
                         <p>Profesor</p>

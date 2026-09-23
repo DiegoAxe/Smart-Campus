@@ -47,74 +47,18 @@ export default function IniciaSesion() {
                 return;
             }
 
-<<<<<<< HEAD
-            // Login correcto 
-            if (dataLogin.success === true && dataLogin.usuario) { 
-                // Crear sesión 
-                iniciarSesion(dataLogin.usuario); 
-                // Redirigir dependiendo del rol 
-                if (dataLogin.usuario.rol === "Estudiante") { 
-                    router.push("/portalEstudiante"); 
-                } else if (dataLogin.usuario.rol === "Docente") { 
-                    router.push("/portalDocente"); 
-                } 
-            }
-            
-        } catch (error: unknown) {
-=======
             // Login correcto
-if (dataLogin.usuario) {
+            if (dataLogin.success === true && dataLogin.usuario) {
+                iniciarSesion(dataLogin.usuario, dataLogin.token);
 
-    // Guardar los datos del usuario en el contexto
-    iniciarSesion(dataLogin.usuario);
-
-    // ==========================================
-    // ESTUDIANTE
-    // ==========================================
-    if (dataLogin.usuario.rol === "Estudiante") {
-
-        // Guardamos el ID del estudiante
-        localStorage.setItem(
-            "id_estudiante",
-            dataLogin.usuario.id_usuario
-        );
-
-        // Ir al portal del estudiante
-        router.push("/portalEstudiante");
-
-    }
-
-    // ==========================================
-    // PROFESOR
-    // ==========================================
-    else if (dataLogin.usuario.rol === "Docente") {
-
-        // Guardamos el ID del profesor
-        localStorage.setItem(
-            "id_profesor",
-            dataLogin.usuario.id_usuario
-        );
-
-        // Ir al portal del profesor
-        router.push("/portalDocente");
-
-    }
-
-    // ==========================================
-    // ROL DESCONOCIDO
-    // ==========================================
-    else {
-
-        setErrorMensaje(
-            "El usuario tiene un rol no reconocido."
-        );
-
-    }
-}
+                if (dataLogin.usuario.rol === "Estudiante") {
+                    router.push("/portalEstudiante");
+                } else if (dataLogin.usuario.rol === "Docente") {
+                    router.push("/portalDocente");
+                }
+            }
 
         } catch (error: unknown) {
-
->>>>>>> 88a92fad81f5cdcfe95f5a99aa05367337d5a5e9
             console.error(error);
 
             const mensaje =
