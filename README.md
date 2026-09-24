@@ -44,8 +44,14 @@ Ademas, necesitamos ejecutar la api REST que actuara como servidor para nuestro 
 
 Con esto, el servidor esta activo, y la API queda disponible en:
 - http://localhost:3001/api
+- Verificacion de API y base de datos: desde la raiz, ejecutar `$ npm run verify:api`
 - Login: http://localhost:3001/api/auth/login
 - Asistencias por estudiante: http://localhost:3001/api/asistencias/estudiante/:id_estudiante
+
+El comando `npm run verify:api` valida que Express responda, que MySQL este
+disponible y que existan las tablas Profesores, Estudiantes, Materias, Grupos,
+Inscripciones, Sesiones y Asistencias. Si devuelve HTTP 503, debe iniciarse
+MySQL y cargarse `smartcampus-db.sql` antes de probar los endpoints.
 
 Y finalmente ejecutamos el proyecto: 
 - Dado que nuestro servidor esta corriendo en una terminal, debemos de abrir una terminal nueva.
