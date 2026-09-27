@@ -1,4 +1,5 @@
 const db = require('../db');
+const argon2 = require("argon2");
 
 const ESTADOS_ASISTENCIA_PERMITIDOS = ['Presente', 'Ausente', 'Tardanza', 'Permiso'];
 
@@ -131,8 +132,9 @@ const procesoLogin = async (req, res) => {
 
             if (profesores.length > 0) {
               const profesor = profesores[0];
+              const contraCorrecta = await argon2.verify( profesor.contraseña, contrasena );
 
-              if(profesor.contraseña != contrasena){
+              if( !contraCorrecta){
                 return res.status(401).json({
                   success: false,
                   mensaje: "Contraseña incorrecta"
@@ -160,8 +162,9 @@ const procesoLogin = async (req, res) => {
 
           if (estudiantes.length > 0) {
               const estudiante = estudiantes[0];
+              const contraCorrecta = await argon2.verify( estudiante.contraseña, contrasena );
 
-              if(estudiante.contraseña != contrasena){
+              if(!contraCorrecta){
                 return res.status(401).json({
                   success: false,
                   mensaje: "Contraseña incorrecta"
@@ -206,8 +209,9 @@ const procesoLogin = async (req, res) => {
 
             if (profesores.length > 0) {
               const profesor = profesores[0];
+              const contraCorrecta = await argon2.verify( profesor.contraseña, contrasena );
 
-              if(profesor.contraseña != contrasena){
+              if(!contraCorrecta){
                 return res.status(401).json({
                   success: false,
                   mensaje: "Contraseña incorrecta"
@@ -235,8 +239,9 @@ const procesoLogin = async (req, res) => {
 
           if (estudiantes.length > 0) {
               const estudiante = estudiantes[0];
-
-              if(estudiante.contraseña != contrasena){
+              const contraCorrecta = await argon2.verify( estudiante.contraseña, contrasena );
+              
+              if(!contraCorrecta){
                 return res.status(401).json({
                   success: false,
                   mensaje: "Contraseña incorrecta"

@@ -91,16 +91,13 @@ export async function postLogin(
     contrasena: string
 ): Promise<LoginResponse> {
 
-    return requestJson<LoginResponse>(`${API_URL}/login`, {
+    return requestJson<LoginResponse>(`${API_URL}/asistencias/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      usuario: texto_correo,
-      identificador: texto_correo,
       texto_correo,
-      contraseña: contrasena,
       contrasena
     })
     });
