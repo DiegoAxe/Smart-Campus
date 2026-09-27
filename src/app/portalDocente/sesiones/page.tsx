@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import "../../../styles/portalDocente.css";
-import { cancelarSesion } from "../../../services/api";
+import { cancelarSesion, finalizarSesion } from "../../../services/api";
 
 interface Sesion {
     id_sesion: number;
@@ -26,6 +26,57 @@ interface Sesion {
 
 export default function SesionesDocente() {
 
+    //// Para que funcione el boton de finalizar una sesion, y marcar inasistencias
+    const handleFinalizarSesion = async (id_sesion: number) => {
+
+        const result = await Swal.fire({
+            title: "¿Seguro que desea finalizar esta sesión?",
+            text: "Esto hara dara por cerrada la sesion, y marcara las inasistencias de los estudiantes faltantes.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, quiero finalizarla.",
+            cancelButtonText: "No"
+        });
+
+        // El usuario presionó "No"
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+            // El usuario presiono "Si"
+            // La api procesa el put
+            await finalizarSesion(id_sesion);
+
+            // Actualizamos solamente la sesión modificada
+            setSesiones((sesionesActuales) =>
+                sesionesActuales.map((sesion) =>
+                    sesion.id_sesion === id_sesion ? { ...sesion, estado: "Finalizada" } : sesion
+                )
+            );
+
+            // Muestra mensaje de éxito despues de la api
+            await Swal.fire({
+                title: "Sesión finalizada",
+                text: "La sesión ha sido finalizada correctamente.",
+                icon: "success",
+                confirmButtonColor: "#3085d6"
+            });
+
+        } catch (error) {
+            Swal.fire({
+                title: "Error",
+                text:
+                    error instanceof Error ? error.message : "Error al finalizar la sesión",
+                icon: "error"
+            });
+
+        }
+    };
+
+    //// Para que funcione el boton de cancelar una sesion
     const handleCancelarSesion = async (id_sesion: number) => {
 
         const result = await Swal.fire({
@@ -798,7 +849,17 @@ export default function SesionesDocente() {
 
                                                     {/* ACCIÓN */}
 
-                                                    <td>
+                                                    <td className="acciones-sesion">
+                                                        {/* Boton para finalizar una sesion programada */
+                                                        sesion.estado == "Programada" ? (
+                                                            <button
+                                                                className="btn-finalizar"
+                                                                onClick={() => handleFinalizarSesion(sesion.id_sesion)}
+                                                            >
+                                                                Finalizar sesión
+                                                            </button>
+                                                        ) : null }
+
 
                                                         <button
                                                             className="btn-ver"
@@ -813,7 +874,6 @@ export default function SesionesDocente() {
 
                                                         {/* Boton para cancelar una sesion programada */
                                                         sesion.estado == "Programada" ? (
-
                                                             <button
                                                                 className="btn-cancelar"
                                                                 onClick={() => handleCancelarSesion(sesion.id_sesion)}

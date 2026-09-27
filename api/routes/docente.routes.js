@@ -4,7 +4,8 @@ const router = express.Router();
 
 const {
     obtenerDashboardDocente,
-    cancelarSesion
+    cancelarSesion,
+    finalizarSesion
 } = require("../controllers/docente.controller");
 
 
@@ -19,6 +20,15 @@ router.get( "/dashboard/:id_profesor", obtenerDashboardDocente);
 // =====================================================
 
 router.put( '/cancelar/:id_sesion', cancelarSesion );
+
+// =====================================================
+// FINALIZAR SESIÓN
+// =====================================================
+
+router.put( '/finalizar/:id_sesion', finalizarSesion );
+
+
+
 
 
 module.exports = router;

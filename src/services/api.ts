@@ -160,6 +160,25 @@ export async function cancelarSesion(
     );
 }
 
+// ==========================================
+// FINALIZAR SESIÓN
+// ==========================================
+
+export async function finalizarSesion(
+    id_sesion: number
+): Promise<{ success: boolean; mensaje: string; ausencias_registradas: number }> {
+
+    return requestJson<{ success: boolean; mensaje: string;  ausencias_registradas: number }>(
+        `${API_URL}/docente/finalizar/${id_sesion}`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+    );
+}
+
 
 // ==========================================
 // ASISTENCIAS DE UNA SESIÓN

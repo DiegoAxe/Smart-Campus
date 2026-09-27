@@ -2,10 +2,13 @@
 
 import "../../styles/portalDocente.css";
 
+import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getDashboardDocente } from "../../services/api";
+import { cancelarSesion, finalizarSesion } from "../../services/api";
+
 
 type Grupo = {
     id_grupo: string;
@@ -64,12 +67,121 @@ type Dashboard = {
 
 export default function PortalDocente() {
 
+    //// Para que funcione el boton de finalizar una sesion, y marcar inasistencias
+    const handleFinalizarSesion = async (id_sesion: number) => {
+
+        const result = await Swal.fire({
+            title: "¿Seguro que desea finalizar esta sesión?",
+            text: "Esto hara dara por cerrada la sesion, y marcara las inasistencias de los estudiantes faltantes.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, quiero finalizarla.",
+            cancelButtonText: "No"
+        });
+
+        // El usuario presionó "No"
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+            // El usuario presiono "Si"
+            // La api procesa el put
+            await finalizarSesion(id_sesion);
+
+            setDashboard((dashboardActual) => {
+                if (!dashboardActual) return dashboardActual;
+
+                return {
+                    ...dashboardActual,
+                    sesiones: dashboardActual.sesiones.map((sesion) =>
+                        sesion.id_sesion === id_sesion ? { ...sesion, estado: "Finalizada" } : sesion
+                    ),
+                };
+            });
+
+            // Muestra mensaje de éxito despues de la api
+            await Swal.fire({
+                title: "Sesión finalizada",
+                text: "La sesión ha sido finalizada correctamente.",
+                icon: "success",
+                confirmButtonColor: "#3085d6"
+            });
+
+        } catch (error) {
+            Swal.fire({
+                title: "Error",
+                text:
+                    error instanceof Error ? error.message : "Error al finalizar la sesión",
+                icon: "error"
+            });
+
+        }
+    };
+
+    //// Para que funcione el boton de cancelar una sesion
+    const handleCancelarSesion = async (id_sesion: number) => {
+
+        const result = await Swal.fire({
+            title: "¿Seguro que desea cancelar esta sesión?",
+            text: "Esta acción no se puede deshacer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, quiero cancelarla.",
+            cancelButtonText: "No"
+        });
+
+        // El usuario presionó "No"
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+
+            // El usuario presiono "Si"
+            // La api procesa el put
+            await cancelarSesion(id_sesion);
+
+            setDashboard((dashboardActual) => {
+                if (!dashboardActual) return dashboardActual;
+
+                return {
+                    ...dashboardActual,
+                    sesiones: dashboardActual.sesiones.map((sesion) =>
+                        sesion.id_sesion === id_sesion ? { ...sesion, estado: "Cancelada" } : sesion
+                    ),
+                };
+            });
+
+            // Muestra mensaje de éxito despues de la api
+            await Swal.fire({
+                title: "Sesión cancelada",
+                text: "La sesión ha sido cancelada correctamente.",
+                icon: "success",
+                confirmButtonColor: "#3085d6"
+            });
+
+        } catch (error) {
+            Swal.fire({
+                title: "Error",
+                text:
+                    error instanceof Error ? error.message : "Error al cancelar la sesión",
+                icon: "error"
+            });
+
+        }
+    };
+
     // ==========================================
     // SESIÓN
     // ==========================================
 
     const { usuario, cerrarSesion } = useAuth();
-    const router = useRouter();
+    const router = useRouter();        
 
     // ==========================================
     // DASHBOARD
@@ -78,6 +190,7 @@ export default function PortalDocente() {
     const [dashboard, setDashboard] = useState<Dashboard | null>(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
+
 
     // ==========================================
     // CARGAR DASHBOARD
@@ -739,21 +852,42 @@ export default function PortalDocente() {
 
                                             </td>
 
-                                            <td>
+                                                    {/* ACCIÓN */}
 
-                                                <button
-                                                    type="button"
-                                                    className="btn-ver"
-                                                    onClick={() =>
-                                                        router.push(
-                                                            `/portalDocente/asistencias?sesion=${sesion.id_sesion}`
-                                                        )
-                                                    }
-                                                >
-                                                    Ver asistencia
-                                                </button>
+                                                    <td className="acciones-sesion">
+                                                        {/* Boton para finalizar una sesion programada */
+                                                        sesion.estado == "Programada" ? (
+                                                            <button
+                                                                className="btn-finalizar"
+                                                                onClick={() => handleFinalizarSesion(sesion.id_sesion)}
+                                                            >
+                                                                Finalizar sesión
+                                                            </button>
+                                                        ) : null }
 
-                                            </td>
+
+                                                        <button
+                                                            className="btn-ver"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/portalDocente/asistencias?sesion=${sesion.id_sesion}`
+                                                                )
+                                                            }
+                                                        >
+                                                            Ver asistencia
+                                                        </button>
+
+                                                        {/* Boton para cancelar una sesion programada */
+                                                        sesion.estado == "Programada" ? (
+                                                            <button
+                                                                className="btn-cancelar"
+                                                                onClick={() => handleCancelarSesion(sesion.id_sesion)}
+                                                            >
+                                                                Cancelar sesión
+                                                            </button>
+                                                        ) : null }
+
+                                                    </td>
 
                                         </tr>
 

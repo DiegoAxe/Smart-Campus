@@ -734,6 +734,130 @@ const cancelarSesion = async (req, res) => {
 
 
 // ======================================================
+// FINALIZAR UNA SESION
+// ======================================================
+
+
+const finalizarSesion = async (req, res) => {
+    const { id_sesion } = req.params;
+    let connection;
+
+    try {
+
+        // Realizaremos una serie de comprobaciones, para que la transaccion funcione bien
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        // 1- BUSCAR LA SESIÓN
+
+        const [sesiones] = await connection.query(
+            `SELECT id_sesion, id_grupo, estado
+             FROM Sesiones
+             WHERE id_sesion = ?`,
+            [id_sesion]
+        );
+
+        if (sesiones.length === 0) {
+            await connection.rollback();
+
+            return res.status(404).json({
+                success: false,
+                mensaje: "La sesión no existe"
+            });
+        }
+
+        const sesion = sesiones[0];
+
+        // 2- COMPROBAR QUE SU ESTADO SEA PROGRAMADA
+
+        if (sesion.estado !== "Programada") {
+            await connection.rollback();
+
+            return res.status(400).json({
+                success: false,
+                mensaje:
+                    "Solo se pueden finalizar sesiones con estado Programada"
+            });
+        }
+
+        // 3- OBTENER ESTUDIANTES SIN ASISTENCIA
+
+        const [estudiantes] = await connection.query(
+            `SELECT i.id_estudiante
+             FROM Inscripciones i
+             WHERE i.id_grupo = ?
+             AND NOT EXISTS (
+                 SELECT 1
+                 FROM Asistencias a
+                 WHERE a.id_sesion = ?
+                 AND a.id_estudiante = i.id_estudiante
+             )`,
+            [
+                sesion.id_grupo,
+                id_sesion
+            ]
+        );
+
+        // 4- REGISTRAR AUSENCIAS
+
+        for (const estudiante of estudiantes) {
+            await connection.query(
+                `INSERT INTO Asistencias
+                    (
+                        id_sesion,
+                        id_estudiante,
+                        estado_asistencia,
+                        metodo_registro
+                    )
+                 VALUES (?, ?, 'Ausente', 'Sistema')`,
+                [
+                    id_sesion,
+                    estudiante.id_estudiante
+                ]
+            );
+        }
+
+        // 5- CAMBIAR SESIÓN A FINALIZADA
+
+        await connection.query(
+            `UPDATE Sesiones
+             SET estado = 'Finalizada'
+             WHERE id_sesion = ?`,
+            [id_sesion]
+        );
+
+        // 6- CONFIRMAR TRANSACCIÓN
+        await connection.commit();
+
+        return res.status(200).json({
+            success: true,
+            mensaje: "Sesión finalizada correctamente",
+            ausencias_registradas: estudiantes.length
+        });
+
+    } catch (error) {
+        // Si ocurrió algún error, deshacer todo
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error(
+            "Error al finalizar sesión:",
+            error
+        );
+        return res.status(500).json({
+            success: false,
+            mensaje: "Error interno del servidor"
+        });
+    } finally {
+        // Liberar conexión
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+
+
+// ======================================================
 // EXPORTAR FUNCIONES
 // ======================================================
 
@@ -743,5 +867,6 @@ module.exports = {
     obtenerSesionesDocente,
     obtenerAsistenciasSesion,
     obtenerReporteDocente,
-    cancelarSesion
+    cancelarSesion,
+    finalizarSesion
 };

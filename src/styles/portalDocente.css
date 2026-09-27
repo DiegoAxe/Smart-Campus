@@ -377,7 +377,6 @@
 }
 
 .btn-cancelar {
-    margin-top: 10px;
     border: none;
     background: #f8d7da;
     color: #842029;
@@ -389,6 +388,20 @@
 
 .btn-cancelar:hover {
     background: #f5c2c7;
+}
+
+.btn-finalizar {
+    border: none;
+    background: #d1e7dd;
+    color: #0f5132;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-finalizar:hover {
+    background: #badbcc;
 }
 
 
@@ -505,4 +518,12 @@
 .sidebar-logout:hover p,
 .sidebar-logout:hover span {
     color: white;
+}
+
+
+/* Para que se vean bien los botones en la tabla */
+.acciones-sesion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
