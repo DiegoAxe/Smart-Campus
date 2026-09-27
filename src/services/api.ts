@@ -91,7 +91,7 @@ export async function postLogin(
     contrasena: string
 ): Promise<LoginResponse> {
 
-    return requestJson<LoginResponse>(`${API_URL}/auth/login`, {
+    return requestJson<LoginResponse>(`${API_URL}/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

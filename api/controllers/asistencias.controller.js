@@ -107,7 +107,7 @@ const registrarAsistencia = async (req, res) => {
   }
 };
 
-// 2. Obtener el resumen de asistencias de un estudiante
+// 2. Hacer el proceso de Login de un estudiante o docente, dependiendo si es el carnet o correo institucional
 const procesoLogin = async (req, res) => {
   const { texto_correo, contrasena } = req.body;
 
