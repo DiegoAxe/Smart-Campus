@@ -1,3 +1,5 @@
+// BORRAR ESTE ARCHIVO
+
 const db = require('../db');
 const jwt = require('jsonwebtoken');
 
