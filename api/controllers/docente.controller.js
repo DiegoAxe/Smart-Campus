@@ -674,20 +674,74 @@ const obtenerReporteDocente = async (req, res) => {
 };
 
 
+
+// ======================================================
+// CANCELAR UNA SESION
+// ======================================================
+
+const cancelarSesion = async (req, res) => {
+    const { id_sesion } = req.params;
+
+     try {
+        // Verificar que la sesión exista
+        const [sesiones] = await db.query(
+            `SELECT id_sesion, estado
+             FROM Sesiones
+             WHERE id_sesion = ?`,
+            [id_sesion]
+        );
+
+        if (sesiones.length === 0) {
+            return res.status(404).json({
+                success: false,
+                mensaje: "La sesión no existe"
+            });
+        }
+
+        const sesion = sesiones[0];
+
+        // Solo se pueden cancelar sesiones programadas
+        if (sesion.estado !== "Programada") {
+            return res.status(400).json({
+                success: false,
+                mensaje: "Solo se pueden cancelar sesiones con estado Programada"
+            });
+        }
+
+        // Cambiar estado
+        await db.query(
+            `UPDATE Sesiones
+             SET estado = 'Cancelada'
+             WHERE id_sesion = ?`,
+            [id_sesion]
+        );
+
+        return res.status(200).json({
+            success: true,
+            mensaje: "Sesión cancelada correctamente"
+        });
+
+    } catch (error) {
+
+        console.error("Error al cancelar sesión:", error);
+
+        return res.status(500).json({
+            success: false,
+            mensaje: "Error interno del servidor"
+        });
+    }
+};
+
+
 // ======================================================
 // EXPORTAR FUNCIONES
 // ======================================================
 
 module.exports = {
-
     obtenerDashboardDocente,
-
     obtenerMateriasDocente,
-
     obtenerSesionesDocente,
-
     obtenerAsistenciasSesion,
-
-    obtenerReporteDocente
-
+    obtenerReporteDocente,
+    cancelarSesion
 };

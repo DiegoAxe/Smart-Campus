@@ -3,7 +3,8 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    obtenerDashboardDocente
+    obtenerDashboardDocente,
+    cancelarSesion
 } = require("../controllers/docente.controller");
 
 
@@ -11,10 +12,13 @@ const {
 // DASHBOARD DEL DOCENTE
 // =====================================================
 
-router.get(
-    "/dashboard/:id_profesor",
-    obtenerDashboardDocente
-);
+router.get( "/dashboard/:id_profesor", obtenerDashboardDocente);
+
+// =====================================================
+// CANCELAR SESIÓN
+// =====================================================
+
+router.put( '/cancelar/:id_sesion', cancelarSesion );
 
 
 module.exports = router;

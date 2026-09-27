@@ -142,6 +142,26 @@ export async function getDashboardDocente(
 
 
 // ==========================================
+// CANCELAR SESIÓN
+// ==========================================
+
+export async function cancelarSesion(
+    id_sesion: number
+): Promise<{ success: boolean; mensaje: string }> {
+
+    return requestJson<{ success: boolean; mensaje: string }>(
+        `${API_URL}/docente/cancelar/${id_sesion}`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+    );
+}
+
+
+// ==========================================
 // ASISTENCIAS DE UNA SESIÓN
 // ==========================================
 
