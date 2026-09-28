@@ -5,6 +5,7 @@ const db = require('./db');
 
 const asistenciasRoutes = require('./routes/asistencias.routes');
 const docenteRoutes = require('./routes/docente.routes');
+const asistenteRoutes = require("./routes/asistente.routes");
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.get('/api/health', async (req, res) => {
 
 app.use('/api/asistencias', asistenciasRoutes);
 app.use('/api/docente', docenteRoutes);
+app.use("/api/asistente", asistenteRoutes);
 
 const PORT = process.env.PORT || 3001;
 

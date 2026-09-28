@@ -1,5 +1,6 @@
 const db = require('../db');
 const argon2 = require("argon2");
+const jwt = require("jsonwebtoken");
 
 const ESTADOS_ASISTENCIA_PERMITIDOS = ['Presente', 'Ausente', 'Tardanza', 'Permiso'];
 
@@ -138,11 +139,23 @@ const procesoLogin = async (req, res) => {
                 return res.status(401).json({
                   success: false,
                   mensaje: "Contraseña incorrecta"
-              });
+                });
               }
+
+              const token = jwt.sign(
+                {
+                    id: profesor.id_profesor,
+                    rol: "Docente"
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "8h"
+                }
+              );
 
               return res.json({
                   success: true,
+                  token,
                   usuario: {
                       id: profesor.id_profesor,
                       nombre: profesor.nombres,
@@ -218,8 +231,20 @@ const procesoLogin = async (req, res) => {
               });
               }
 
+              const token = jwt.sign(
+                {
+                    id: profesor.id_profesor,
+                    rol: "Docente"
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "8h"
+                }
+              );
+
               return res.json({
                   success: true,
+                  token,
                   usuario: {
                       id: profesor.id_profesor,
                       nombre: profesor.nombres,

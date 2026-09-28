@@ -27,8 +27,4 @@ router.put( '/cancelar/:id_sesion', cancelarSesion );
 
 router.put( '/finalizar/:id_sesion', finalizarSesion );
 
-
-
-
-
 module.exports = router;

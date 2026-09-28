@@ -206,3 +206,37 @@ export async function registrarAsistencia(
         }
     );
 }
+
+// ==========================================
+// ASISTENTE IA
+// ==========================================
+
+export type PreguntarAsistenteResponse = {
+    success: boolean;
+    respuesta: string;
+};
+
+export async function preguntarAsistente(
+    pregunta: string
+): Promise<PreguntarAsistenteResponse> {
+
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+        throw new Error("No hay una sesión válida.");
+    }
+
+    return requestJson<PreguntarAsistenteResponse>(
+        `${API_URL}/asistente`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                pregunta
+            })
+        }
+    );
+}

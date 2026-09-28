@@ -6,8 +6,7 @@ import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getDashboardDocente } from "../../services/api";
-import { cancelarSesion, finalizarSesion } from "../../services/api";
+import { getDashboardDocente, preguntarAsistente, cancelarSesion, finalizarSesion } from "../../services/api";
 
 
 type Grupo = {
@@ -66,6 +65,53 @@ type Dashboard = {
 };
 
 export default function PortalDocente() {
+
+    //// Para que funcione el boton de hacerle una pregunta al asistente IA
+    const handlePreguntaAsistente = async () => {
+        const preguntaLimpia = pregunta.trim();
+
+        if (!preguntaLimpia) {
+            return;
+        }
+
+        if (preguntaLimpia.length > 500) {
+            Swal.fire({
+                title: "Pregunta demasiado larga",
+                text: "La pregunta no puede superar los 500 caracteres.",
+                icon: "warning",
+                confirmButtonColor: "#3085d6"
+            });
+            return;
+        }
+
+        try {
+            setCargandoAsistente(true);
+            setMostrarRespuesta(false);
+            setRespuestaAsistente("");
+            const data = await preguntarAsistente(preguntaLimpia);
+            setRespuestaAsistente(data.respuesta);
+            setMostrarRespuesta(true);
+
+        } catch (error) {
+            console.error(
+                "Error al consultar asistente:",
+                error
+            );
+
+            Swal.fire({
+                title: "Error",
+                text:
+                    error instanceof Error
+                        ? error.message
+                        : "No se pudo obtener una respuesta del asistente.",
+                icon: "error",
+                confirmButtonColor: "#3085d6"
+            });
+
+        } finally {
+            setCargandoAsistente(false);
+        }
+    };
 
     //// Para que funcione el boton de finalizar una sesion, y marcar inasistencias
     const handleFinalizarSesion = async (id_sesion: number) => {
@@ -190,6 +236,12 @@ export default function PortalDocente() {
     const [dashboard, setDashboard] = useState<Dashboard | null>(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
+
+    //Para el asistente de IA
+    const [pregunta, setPregunta] = useState("");
+    const [respuestaAsistente, setRespuestaAsistente] = useState("");
+    const [cargandoAsistente, setCargandoAsistente] = useState(false);
+    const [mostrarRespuesta, setMostrarRespuesta] = useState(false);
 
 
     // ==========================================
@@ -543,7 +595,86 @@ export default function PortalDocente() {
 
                 </section>
 
+                {/* ==========================================
+                    ASISTENTE IA
+                ========================================== */}
 
+                <section className="asistente-docente">
+                    <div className="asistente-header">
+
+                        <div>
+                            <h2>
+                                Pregúntale a tu asistente IA
+                            </h2>
+
+                            <p>
+                                Consulta información sobre tus grupos,
+                                estudiantes, sesiones y asistencias.
+                            </p>
+                        </div>
+
+                        <span className="asistente-icono">
+                            ✨
+                        </span>
+                    </div>
+
+                    <div className="asistente-input-container">
+                        <textarea
+                            value={pregunta}
+                            onChange={(e) => setPregunta(e.target.value)}
+                            placeholder="Ejemplo: ¿Cuáles son mis grupos?"
+                            maxLength={500}
+                            disabled={cargandoAsistente}
+                            rows={3}
+                        />
+
+                        <div className="asistente-input-footer">
+                            <span className="contador-pregunta">
+                                {pregunta.length}/500
+                            </span>
+
+                            <button
+                                type="button"
+                                onClick={handlePreguntaAsistente}
+                                disabled={
+                                    cargandoAsistente ||
+                                    pregunta.trim().length === 0
+                                }
+                            >
+                                {cargandoAsistente
+                                    ? "Consultando..."
+                                    : "Preguntar"}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* RESPUESTA */}
+                    {mostrarRespuesta && (
+
+                        <div className="asistente-respuesta">
+                            <div className="respuesta-header">
+                                <h3>
+                                    Respuesta del asistente
+                                </h3>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setMostrarRespuesta(false)
+                                    }
+                                >
+                                    Ocultar
+                                </button>
+                            </div>
+
+                            <p>
+                                {respuestaAsistente}
+                            </p>
+                        </div>
+                    )}
+                </section>
+
+                
                 {/* ==========================================
                     TARJETAS RESUMEN
                 ========================================== */}
