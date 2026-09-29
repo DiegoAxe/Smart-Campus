@@ -132,37 +132,45 @@ const tools = [
     }
 ];
 
+const toolConfig = {
+    functionCallingConfig: {
+        mode: "VALIDATED"
+    },
+    includeServerSideToolInvocations: true
+};
+
 
 // IDENTIFICAR EL ERROR, Y MANDAR UN MENSAJE DE ERROR AMIGABLE AL USUARIO
 const identificarErrorGemini = (error) => {
     const mensaje = error?.message || "";
     const status = error?.status || error?.code;
 
-    // CUOTA DIARIA
+    // CUOTA / LÍMITE DE USO
     if (
         mensaje.includes("GenerateRequestsPerDay") ||
         mensaje.includes("PerDay") ||
-        mensaje.includes("daily quota")
+        mensaje.includes("daily quota") ||
+        mensaje.includes("quota") ||
+        mensaje.includes("RESOURCE_EXHAUSTED")
     ) {
         return {
-            tipo: "CUOTA_DIARIA",
+            tipo: "CUOTA",
             mensaje:
-                "Se alcanzó el límite diario de uso del asistente. " +
-                "Intenta nuevamente cuando la cuota se haya restablecido."
+                "El asistente alcanzó temporalmente su límite de uso. " +
+                "Intenta nuevamente cuando la cuota se restablezca."
         };
     }
 
-    // DEMASIADO TRÁFICO / RATE LIMIT
+    // DEMASIADAS SOLICITUDES EN POCO TIEMPO
     if (
         status === 429 ||
-        mensaje.includes("RESOURCE_EXHAUSTED") ||
         mensaje.includes("Too Many Requests")
     ) {
         return {
-            tipo: "MUCHO_TRAFICO",
+            tipo: "RATE_LIMIT",
             mensaje:
-                "El asistente está experimentando mucho tráfico en este momento. " +
-                "Intenta nuevamente en unos minutos."
+                "Se realizaron demasiadas solicitudes al asistente en poco tiempo. " +
+                "Espera unos segundos e inténtalo nuevamente."
         };
     }
 
@@ -250,9 +258,12 @@ async function preguntarGemini(pregunta, idProfesor) {
 
             config: {
                 systemInstruction: SYSTEM_INSTRUCTION,
-                temperature: 0.4,
                 maxOutputTokens: 500,
-                tools
+                thinkingConfig: {
+                    thinkingLevel: "low"
+                },
+                tools,
+                toolConfig
             }
         });
 
@@ -359,9 +370,12 @@ async function preguntarGemini(pregunta, idProfesor) {
 
             config: {
                 systemInstruction: SYSTEM_INSTRUCTION,
-                temperature: 0.4,
                 maxOutputTokens: 500,
-                tools
+                thinkingConfig: {
+                    thinkingLevel: "low"
+                },
+                tools,
+                toolConfig
             }
         });
 
