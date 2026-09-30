@@ -1,6 +1,137 @@
 const db = require("../db");
 
 // ======================================================
+// CREAR SESION
+// ======================================================
+
+
+const crearSesion = async (req, res) => {
+    try {
+
+        const {
+            id_profesor,
+            id_grupo,
+            fecha,
+            hora_inicio,
+            hora_fin
+        } = req.body;
+
+        // ==========================================
+        // VALIDAR DATOS
+        // ==========================================
+
+        if (
+            !id_profesor ||
+            !id_grupo ||
+            !fecha ||
+            !hora_inicio ||
+            !hora_fin
+        ) {
+            return res.status(400).json({
+                success: false,
+                mensaje: "Todos los campos son obligatorios."
+            });
+        }
+
+        // ==========================================
+        // VALIDAR HORARIO
+        // ==========================================
+
+        if (hora_inicio >= hora_fin) {
+            return res.status(400).json({
+                success: false,
+                mensaje: "La hora de inicio debe ser anterior a la hora de finalización."
+            });
+        }
+
+        // ==========================================
+        // VERIFICAR QUE EL GRUPO PERTENEZCA
+        // AL PROFESOR
+        // ==========================================
+
+        const [grupos] = await db.query(
+            `
+            SELECT
+                g.id_grupo,
+                g.id_profesor,
+                g.numero_grupo,
+                g.aula,
+                m.nombre_materia
+            FROM Grupos g
+            INNER JOIN Materias m
+                ON g.id_materia = m.id_materia
+            WHERE g.id_grupo = ?
+              AND g.id_profesor = ?
+            `,
+            [id_grupo, id_profesor]
+        );
+
+        if (grupos.length === 0) {
+            return res.status(403).json({
+                success: false,
+                mensaje: "El grupo seleccionado no pertenece a este profesor."
+            });
+        }
+
+        // ==========================================
+        // CREAR SESIÓN
+        // ==========================================
+
+        const [resultado] = await db.query(
+            `
+            INSERT INTO Sesiones (
+                id_grupo,
+                fecha,
+                hora_inicio,
+                hora_fin,
+                estado
+            )
+            VALUES (?, ?, ?, ?, 'Programada')
+            `,
+            [
+                id_grupo,
+                fecha,
+                hora_inicio,
+                hora_fin
+            ]
+        );
+
+        // ==========================================
+        // RESPUESTA
+        // ==========================================
+
+        return res.status(201).json({
+            success: true,
+            mensaje: "Sesión creada correctamente.",
+            id_sesion: resultado.insertId,
+            sesion: {
+                id_sesion: resultado.insertId,
+                id_grupo: grupos[0].id_grupo,
+                numero_grupo: grupos[0].numero_grupo,
+                nombre_materia: grupos[0].nombre_materia,
+                aula: grupos[0].aula,
+                fecha,
+                hora_inicio,
+                hora_fin,
+                estado: "Programada"
+            }
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error al crear sesión:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            mensaje: "No se pudo crear la sesión."
+        });
+    }
+};
+
+// ======================================================
 // DASHBOARD DEL DOCENTE
 // ======================================================
 
@@ -868,5 +999,6 @@ module.exports = {
     obtenerAsistenciasSesion,
     obtenerReporteDocente,
     cancelarSesion,
-    finalizarSesion
+    finalizarSesion,
+    crearSesion
 };

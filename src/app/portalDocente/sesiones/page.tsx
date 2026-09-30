@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import "../../../styles/portalDocente.css";
-import { cancelarSesion, finalizarSesion } from "../../../services/api";
+import { cancelarSesion, finalizarSesion, crearSesion } from "../../../services/api";
 
 interface Sesion {
     id_sesion: number;
@@ -13,7 +13,7 @@ interface Sesion {
     hora_inicio: string;
     hora_fin: string;
     estado: string;
-    id_grupo: number;
+    id_grupo: string;
     numero_grupo: string;
     aula: string;
     nombre_materia: string;
@@ -22,6 +22,15 @@ interface Sesion {
     ausentes: number;
     tardanzas: number;
     permisos: number;
+}
+
+interface Grupo {
+    id_grupo: string;
+    numero_grupo: string;
+    ciclo_academico: string;
+    aula: string;
+    nombre_materia: string;
+    estudiantes: number;
 }
 
 export default function SesionesDocente() {
@@ -136,6 +145,161 @@ export default function SesionesDocente() {
     const [error, setError] = useState("");
 
     // =====================================================
+    // CREAR NUEVA SESIÓN
+    // =====================================================
+
+    const handleCrearSesion = async () => {
+
+        // ==========================================
+        // OBTENER ID DEL PROFESOR
+        // ==========================================
+
+        const idProfesor =
+            usuario?.id_profesor ||
+            usuario?.id ||
+            usuario?.id_usuario;
+
+        if (!idProfesor) {
+
+            await Swal.fire({
+                title: "Error",
+                text: "No se encontró el ID del profesor.",
+                icon: "error"
+            });
+
+            return;
+        }
+
+
+        // ==========================================
+        // VALIDAR CAMPOS
+        // ==========================================
+
+        if (
+            !fechaNuevaSesion ||
+            !horaInicioNuevaSesion ||
+            !horaFinNuevaSesion ||
+            !grupoNuevaSesion
+        ) {
+
+            await Swal.fire({
+                title: "Campos incompletos",
+                text: "Debe completar todos los campos para crear la sesión.",
+                icon: "warning"
+            });
+
+            return;
+        }
+
+
+        // ==========================================
+        // VALIDAR HORARIO
+        // ==========================================
+
+        if (horaInicioNuevaSesion >= horaFinNuevaSesion) {
+
+            await Swal.fire({
+                title: "Horario inválido",
+                text: "La hora de inicio debe ser anterior a la hora de finalización.",
+                icon: "warning"
+            });
+            return;
+        }
+
+        try {
+
+            setCreandoSesion(true);
+
+
+            // ==========================================
+            // LLAMAR A LA API
+            // ==========================================
+
+            const respuesta = await crearSesion({
+                id_profesor: String(idProfesor),
+                id_grupo: grupoNuevaSesion,
+                fecha: fechaNuevaSesion,
+                hora_inicio: horaInicioNuevaSesion,
+                hora_fin: horaFinNuevaSesion
+            });
+
+
+            // ==========================================
+            // AGREGAR SESIÓN A LA TABLA
+            // ==========================================
+
+            setSesiones((sesionesActuales) => [
+                {
+                    ...respuesta.sesion,
+                    total_asistencias: 0,
+                    presentes: 0,
+                    ausentes: 0,
+                    tardanzas: 0,
+                    permisos: 0
+                },
+                ...sesionesActuales
+            ]);
+
+
+            // ==========================================
+            // LIMPIAR FORMULARIO
+            // ==========================================
+
+            setFechaNuevaSesion("");
+            setHoraInicioNuevaSesion("");
+            setHoraFinNuevaSesion("");
+            setGrupoNuevaSesion("");
+
+
+            // ==========================================
+            // MENSAJE DE ÉXITO
+            // ==========================================
+
+            await Swal.fire({
+                title: "Sesión creada",
+                text: "La sesión ha sido programada correctamente.",
+                icon: "success",
+                confirmButtonColor: "#3085d6"
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Error al crear sesión:",
+                error
+            );
+
+            await Swal.fire({
+                title: "Error",
+                text:
+                    error instanceof Error
+                        ? error.message
+                        : "No se pudo crear la sesión.",
+                icon: "error"
+            });
+
+        } finally {
+
+            setCreandoSesion(false);
+
+        }
+    };
+
+    // =====================================================
+    // CREAR SESIÓN
+    // =====================================================
+
+    const [grupos, setGrupos] = useState<Grupo[]>([]);
+
+    const [fechaNuevaSesion, setFechaNuevaSesion] = useState("");
+    const [horaInicioNuevaSesion, setHoraInicioNuevaSesion] = useState("");
+    const [horaFinNuevaSesion, setHoraFinNuevaSesion] = useState("");
+    const [grupoNuevaSesion, setGrupoNuevaSesion] = useState("");
+
+    const [creandoSesion, setCreandoSesion] = useState(false);
+
+    // =====================================================
     // OBTENER SESIONES
     // =====================================================
 
@@ -226,29 +390,41 @@ export default function SesionesDocente() {
                     setSesiones(data.sesiones);
 
                 } else {
-
                     console.log(
                         "La respuesta no contiene un arreglo sesiones"
                     );
-
                     setSesiones([]);
                 }
 
-            } catch (error: any) {
+                // =====================================================
+                // CARGAR GRUPOS DEL PROFESOR
+                // =====================================================
 
+                if (Array.isArray(data.grupos)) {
+                    console.log(
+                        "GRUPOS ENCONTRADOS:",
+                        data.grupos.length
+                    );
+                    setGrupos(data.grupos);
+
+                } else {
+                    console.log(
+                        "La respuesta no contiene un arreglo grupos"
+                    );
+                    setGrupos([]);
+                }
+
+            } catch (error: any) {
                 console.error(
                     "================================="
                 );
-
                 console.error(
                     "ERROR AL CARGAR SESIONES:",
                     error
                 );
-
                 console.error(
                     "================================="
                 );
-
                 setError(
                     error?.message ||
                     "No se pudieron cargar las sesiones."
@@ -566,6 +742,321 @@ export default function SesionesDocente() {
                     </p>
 
                 </section>
+
+                    {/* =================================================
+                        CREAR NUEVA SESIÓN
+                    ================================================= */}
+
+                    <section className="docente-section">
+
+                        <div className="section-title">
+
+                            <div>
+
+                                <h2>
+                                    Crear nueva sesión
+                                </h2>
+
+                                <p>
+                                    Programa una nueva sesión para uno de tus grupos.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            style={{
+                                background: "#ffffff",
+                                borderRadius: "12px",
+                                padding: "25px",
+                                marginBottom: "30px",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+                            }}
+                        >
+
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                                    gap: "20px"
+                                }}
+                            >
+
+                                {/* FECHA */}
+
+                                <div>
+
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "600",
+                                            marginBottom: "8px"
+                                        }}
+                                    >
+                                        Fecha
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        value={fechaNuevaSesion}
+                                        onChange={(e) =>
+                                            setFechaNuevaSesion(e.target.value)
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px",
+                                            border: "1px solid #ccc",
+                                            borderRadius: "6px"
+                                        }}
+                                    />
+
+                                </div>
+
+
+                                {/* GRUPO */}
+
+                                <div>
+
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "600",
+                                            marginBottom: "8px"
+                                        }}
+                                    >
+                                        Grupo
+                                    </label>
+
+                                    <select
+                                        value={grupoNuevaSesion}
+                                        onChange={(e) =>
+                                            setGrupoNuevaSesion(e.target.value)
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px",
+                                            border: "1px solid #ccc",
+                                            borderRadius: "6px"
+                                        }}
+                                    >
+
+                                        <option value="">
+                                            Seleccione un grupo
+                                        </option>
+
+                                        {grupos.map((grupo) => (
+
+                                            <option
+                                                key={grupo.id_grupo}
+                                                value={grupo.id_grupo}
+                                            >
+
+                                                {grupo.nombre_materia}
+                                                {" - Grupo "}
+                                                {grupo.numero_grupo}
+                                                {" - Aula "}
+                                                {grupo.aula}
+
+                                            </option>
+
+                                        ))}
+
+                                    </select>
+
+                                </div>
+
+
+                                {/* HORA INICIO */}
+
+                                <div>
+
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "600",
+                                            marginBottom: "8px"
+                                        }}
+                                    >
+                                        Hora de inicio
+                                    </label>
+
+                                    <input
+                                        type="time"
+                                        value={horaInicioNuevaSesion}
+                                        onChange={(e) =>
+                                            setHoraInicioNuevaSesion(e.target.value)
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px",
+                                            border: "1px solid #ccc",
+                                            borderRadius: "6px"
+                                        }}
+                                    />
+
+                                </div>
+
+
+                                {/* HORA FIN */}
+
+                                <div>
+
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "600",
+                                            marginBottom: "8px"
+                                        }}
+                                    >
+                                        Hora de finalización
+                                    </label>
+
+                                    <input
+                                        type="time"
+                                        value={horaFinNuevaSesion}
+                                        onChange={(e) =>
+                                            setHoraFinNuevaSesion(e.target.value)
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px",
+                                            border: "1px solid #ccc",
+                                            borderRadius: "6px"
+                                        }}
+                                    />
+
+                                </div>
+
+                            </div>
+
+
+                            {/* INFORMACIÓN DEL GRUPO */}
+
+                            {grupoNuevaSesion && (
+
+                                <div
+                                    style={{
+                                        marginTop: "20px",
+                                        padding: "15px",
+                                        background: "#f5f7fa",
+                                        borderRadius: "8px"
+                                    }}
+                                >
+
+                                    {(() => {
+
+                                        const grupoSeleccionado =
+                                            grupos.find(
+                                                (grupo) =>
+                                                    grupo.id_grupo ===
+                                                    grupoNuevaSesion
+                                            );
+
+                                        if (!grupoSeleccionado) {
+                                            return null;
+                                        }
+
+                                        return (
+
+                                            <>
+
+                                                <strong>
+                                                    {grupoSeleccionado.nombre_materia}
+                                                </strong>
+
+                                                <p
+                                                    style={{
+                                                        margin: "5px 0 0"
+                                                    }}
+                                                >
+                                                    Grupo:{" "}
+                                                    {grupoSeleccionado.numero_grupo}
+                                                    {" | "}
+                                                    Aula:{" "}
+                                                    {grupoSeleccionado.aula}
+                                                    {" | "}
+                                                    ID:{" "}
+                                                    {grupoSeleccionado.id_grupo}
+                                                </p>
+
+                                            </>
+
+                                        );
+
+                                    })()}
+
+                                </div>
+
+                            )}
+
+
+                            {/* BOTÓN */}
+
+                            <div
+                                style={{
+                                    marginTop: "20px",
+                                    display: "flex",
+                                    justifyContent: "flex-end"
+                                }}
+                            >
+
+                                <button
+                                    type="button"
+                                    onClick={handleCrearSesion}
+                                    disabled={
+                                        creandoSesion ||
+                                        grupos.length === 0
+                                    }
+                                    style={{
+                                        padding: "11px 22px",
+                                        border: "none",
+                                        borderRadius: "7px",
+                                        background: "#3085d6",
+                                        color: "#ffffff",
+                                        fontWeight: "600",
+                                        cursor:
+                                            creandoSesion ||
+                                            grupos.length === 0
+                                                ? "not-allowed"
+                                                : "pointer",
+                                        opacity:
+                                            creandoSesion ||
+                                            grupos.length === 0
+                                                ? 0.6
+                                                : 1
+                                    }}
+                                >
+
+                                    {creandoSesion
+                                        ? "Creando sesión..."
+                                        : "Crear sesión"}
+
+                                </button>
+
+                            </div>
+
+
+                            {/* SIN GRUPOS */}
+
+                            {grupos.length === 0 && !cargando && (
+
+                                <p
+                                    style={{
+                                        marginTop: "15px",
+                                        color: "#666"
+                                    }}
+                                >
+                                    No tienes grupos disponibles para crear una sesión.
+                                </p>
+
+                            )}
+
+                        </div>
+
+                    </section>
+
 
 
                 {/* =================================================

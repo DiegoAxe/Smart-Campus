@@ -2,64 +2,104 @@ const db = require('../db');
 const argon2 = require("argon2");
 const jwt = require("jsonwebtoken");
 
-const ESTADOS_ASISTENCIA_PERMITIDOS = ['Presente', 'Ausente', 'Tardanza', 'Permiso'];
-
-// 1. Registrar asistencia de un estudiante
+// 1. Registrar asistencia mediante QR
 const registrarAsistencia = async (req, res) => {
-  const {
-    id_sesion,
-    id_estudiante,
-    metodo_registro,
-    estado_asistencia = 'Presente'
-  } = req.body;
+  const { id_sesion, id_estudiante } = req.body;
 
+  // Verificar datos obligatorios
   if (!id_sesion || !id_estudiante) {
     return res.status(400).json({
       error: 'Se requieren el id_sesion y el id_estudiante'
     });
   }
 
-  if (!ESTADOS_ASISTENCIA_PERMITIDOS.includes(estado_asistencia)) {
-    return res.status(400).json({
-      error: 'El estado de asistencia no es válido'
-    });
-  }
-
   try {
-    const [sesion] = await db.query(
-      `SELECT s.id_sesion, s.estado, s.id_grupo
-       FROM Sesiones s
-       WHERE s.id_sesion = ?`,
+    // ==========================================
+    // 1. Buscar la sesión
+    // ==========================================
+    const [sesiones] = await db.query(
+      `
+      SELECT
+        s.id_sesion,
+        s.id_grupo,
+        s.fecha,
+        s.hora_inicio,
+        s.hora_fin,
+        s.estado
+      FROM Sesiones s
+      WHERE s.id_sesion = ?
+      `,
       [id_sesion]
     );
 
-    if (sesion.length === 0) {
-      return res.status(404).json({ error: 'La sesión de clase no existe' });
-    }
-
-    if (sesion[0].estado === 'Finalizada' || sesion[0].estado === 'Cancelada') {
-      return res.status(400).json({
-        error: `No se puede registrar asistencia. La sesión está ${sesion[0].estado}`
+    // La sesión no existe
+    if (sesiones.length === 0) {
+      return res.status(404).json({
+        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
       });
     }
 
+    const sesion = sesiones[0];
+
+    // ==========================================
+    // 2. Verificar estado de la sesión
+    // ==========================================
+    if (
+      sesion.estado === 'Finalizada' ||
+      sesion.estado === 'Cancelada'
+    ) {
+      return res.status(400).json({
+        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
+      });
+    }
+
+    // ==========================================
+    // 3. Verificar que el estudiante exista
+    // ==========================================
+    const [estudiantes] = await db.query(
+      `
+      SELECT id_estudiante
+      FROM Estudiantes
+      WHERE id_estudiante = ?
+      `,
+      [id_estudiante]
+    );
+
+    if (estudiantes.length === 0) {
+      return res.status(404).json({
+        error: 'El estudiante ingresado no existe en la base de datos'
+      });
+    }
+
+    // ==========================================
+    // 4. Verificar inscripción al grupo
+    // ==========================================
     const [inscripcion] = await db.query(
-      `SELECT 1
-       FROM Inscripciones
-       WHERE id_estudiante = ? AND id_grupo = ?`,
-      [id_estudiante, sesion[0].id_grupo]
+      `
+      SELECT 1
+      FROM Inscripciones
+      WHERE id_estudiante = ?
+        AND id_grupo = ?
+      `,
+      [id_estudiante, sesion.id_grupo]
     );
 
     if (inscripcion.length === 0) {
       return res.status(400).json({
-        error: 'El estudiante no está inscrito en este grupo o sesión'
+        error: 'El estudiante no está inscrito en este grupo'
       });
     }
 
+    // ==========================================
+    // 5. Verificar si ya registró asistencia
+    // ==========================================
     const [asistenciaExistente] = await db.query(
-      `SELECT id_asistencia
-       FROM Asistencias
-       WHERE id_sesion = ? AND id_estudiante = ?`,
+      `
+      SELECT id_asistencia
+      FROM Asistencias
+      WHERE id_sesion = ?
+        AND id_estudiante = ?
+      `,
       [id_sesion, id_estudiante]
     );
 
@@ -69,43 +109,116 @@ const registrarAsistencia = async (req, res) => {
       });
     }
 
+    // ==========================================
+    // 6. Calcular fecha y hora actual
+    // ==========================================
+    const ahora = new Date();
+
+    // Fecha actual en formato YYYY-MM-DD
+    const fechaActual = ahora.toISOString().split('T')[0];
+
+    // Verificar que la sesión corresponda al día actual
+    const fechaSesion = new Date(sesion.fecha)
+      .toISOString()
+      .split('T')[0];
+
+    if (fechaActual !== fechaSesion) {
+      return res.status(400).json({
+        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
+      });
+    }
+
+    // ==========================================
+    // 7. Construir fecha/hora de inicio y fin
+    // ==========================================
+    const inicioSesion = new Date(
+      `${fechaSesion}T${sesion.hora_inicio}`
+    );
+
+    const finSesion = new Date(
+      `${fechaSesion}T${sesion.hora_fin}`
+    );
+
+    // 15 minutos después de comenzar
+    const limitePresente = new Date(
+      inicioSesion.getTime() + 15 * 60 * 1000
+    );
+
+    // ==========================================
+    // 8. Determinar estado de asistencia
+    // ==========================================
+    let estadoAsistencia;
+
+    if (ahora >= inicioSesion && ahora <= limitePresente) {
+      // Desde la hora de inicio hasta 15 minutos después
+      estadoAsistencia = 'Presente';
+
+    } else if (ahora > limitePresente && ahora < finSesion) {
+      // Después de los 15 minutos pero antes de finalizar
+      estadoAsistencia = 'Tardanza';
+
+    } else {
+      // Antes de iniciar o después de finalizar
+      return res.status(400).json({
+        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
+      });
+    }
+
+    // ==========================================
+    // 9. Registrar asistencia
+    // ==========================================
     const queryInsert = `
-      INSERT INTO Asistencias (id_sesion, id_estudiante, estado_asistencia, hora_marca, metodo_registro)
-      VALUES (?, ?, ?, NOW(), ?)
+      INSERT INTO Asistencias (
+        id_sesion,
+        id_estudiante,
+        estado_asistencia,
+        hora_marca,
+        metodo_registro
+      )
+      VALUES (?, ?, ?, NOW(), 'QR')
     `;
 
     await db.query(queryInsert, [
       id_sesion,
       id_estudiante,
-      estado_asistencia,
-      metodo_registro || 'QR'
+      estadoAsistencia
     ]);
 
+    // ==========================================
+    // 10. Respuesta
+    // ==========================================
     return res.status(201).json({
       mensaje: 'Asistencia registrada correctamente',
       datos: {
         id_sesion,
         id_estudiante,
-        estado_asistencia,
-        hora_marca: new Date()
+        estado_asistencia: estadoAsistencia,
+        metodo_registro: 'QR',
+        hora_marca: ahora
       }
     });
 
   } catch (error) {
+
+    // Registro duplicado
     if (error.errno === 1062) {
       return res.status(409).json({
         error: 'El estudiante ya tiene asistencia registrada en esta sesión'
       });
     }
 
+    // Problema con FK
     if (error.errno === 1452) {
       return res.status(404).json({
-        error: 'El estudiante ingresado no existe en la base de datos'
+        error: 'El estudiante o la sesión ingresada no existe'
       });
     }
 
     console.error('Error al registrar asistencia:', error);
-    return res.status(500).json({ error: 'Error interno del servidor' });
+
+    return res.status(500).json({
+      error: 'Error interno del servidor'
+    });
   }
 };
 

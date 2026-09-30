@@ -5,8 +5,16 @@ const router = express.Router();
 const {
     obtenerDashboardDocente,
     cancelarSesion,
-    finalizarSesion
+    finalizarSesion,
+    crearSesion
 } = require("../controllers/docente.controller");
+
+
+// =====================================================
+// CREAR SESION
+// =====================================================
+
+router.post( "/sesiones", crearSesion );
 
 
 // =====================================================

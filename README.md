@@ -32,6 +32,9 @@ Dependencias utilizadas:
 - npm install redux (utilizadas para los states)
 - npm install express cors dotenv (utilizada para el funcionamiento de la api)
 - npm install mysql2 (utilizada para el acceso a la base de datos en mysqli)
+- npm install sweetalert2 (utilizada para alertas, sobre todo en errores)
+- npm install jsonwebtoken (utilizada para validacion del usuario, util para manejar permisos de consultas en la IA)
+- npm install argon2 (utilizada para la encriptacion de contraseñas)
 
 En este momento, nos encontramos en la carpeta del proyecto, pero antes de ejecutarlo, debemos hacer unos detalles:
 
@@ -60,3 +63,8 @@ Y finalmente ejecutamos el proyecto:
 
 Una vez iniciado, abra el navegador y acceda a: 
 - http://localhost:3000 (o al puerto que usted tenga elegido)
+
+
+El asistente IA que utiliza es Gemini 3.8 Flash.
+
+Para realizar pruebas, se necesitan el archivo actualizado de las variables de entorno, para tokens e IA. En caso de necesitarlo, comunicarse con el equipo.

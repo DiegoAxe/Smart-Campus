@@ -30,6 +30,53 @@ async function requestJson<T>(
 }
 
 // ==========================================
+// CREAR SESIÓN
+// ==========================================
+
+export interface CrearSesionRequest {
+    id_profesor: string;
+    id_grupo: string;
+    fecha: string;
+    hora_inicio: string;
+    hora_fin: string;
+}
+
+export interface CrearSesionResponse {
+    success: boolean;
+    mensaje: string;
+    id_sesion: number;
+    sesion: {
+        id_sesion: number;
+        id_grupo: string;
+        numero_grupo: string;
+        nombre_materia: string;
+        aula: string;
+        fecha: string;
+        hora_inicio: string;
+        hora_fin: string;
+        estado: string;
+    };
+}
+
+export async function crearSesion(
+    payload: CrearSesionRequest
+): Promise<CrearSesionResponse> {
+
+    return requestJson<CrearSesionResponse>(
+        `${API_URL}/docente/sesiones`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        }
+    );
+}
+
+
+
+// ==========================================
 // ASISTENCIAS DEL ESTUDIANTE
 // ==========================================
 

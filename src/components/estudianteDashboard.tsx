@@ -8,7 +8,7 @@ import type { EstudianteResumen } from "../types/estudianteResumen";
 import type { MateriasResumen } from "../types/materiasResumen";
 import "../styles/estuDashboard.css";
 import { getAsistenciasporCarnet, getEstudianteResumen, getMateriasResumen } from "../services/api";
-import { formatearFecha, formatearHora, ordenarHora } from "../redux/formatearFecha";
+import { formatearFecha, formatearHora, ordenarHora } from "../components/formatearFecha";
 import { useState, useEffect } from "react";
 
 export default function estudianteDashboard() {
