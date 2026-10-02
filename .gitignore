@@ -12,6 +12,8 @@
 .env
 .env.*
 api/datos.env
+importar.js
+este_es.sql
 
 # testing
 /coverage

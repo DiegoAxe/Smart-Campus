@@ -57,8 +57,8 @@ const crearSesion = async (req, res) => {
                 g.numero_grupo,
                 g.aula,
                 m.nombre_materia
-            FROM Grupos g
-            INNER JOIN Materias m
+            FROM grupos g
+            INNER JOIN materias m
                 ON g.id_materia = m.id_materia
             WHERE g.id_grupo = ?
               AND g.id_profesor = ?
@@ -79,7 +79,7 @@ const crearSesion = async (req, res) => {
 
         const [resultado] = await db.query(
             `
-            INSERT INTO Sesiones (
+            INSERT INTO sesiones (
                 id_grupo,
                 fecha,
                 hora_inicio,
@@ -157,7 +157,7 @@ const obtenerDashboardDocente = async (req, res) => {
                 apellidos,
                 correo_institucional,
                 departamento_facultad
-            FROM Profesores
+            FROM profesores
             WHERE id_profesor = ?
         `, [id_profesor]);
 
@@ -188,15 +188,15 @@ const obtenerDashboardDocente = async (req, res) => {
 
                 COUNT(DISTINCT s.id_sesion) AS sesiones
 
-            FROM Grupos g
+            FROM grupos g
 
-            INNER JOIN Materias m
+            INNER JOIN materias m
                 ON g.id_materia = m.id_materia
 
-            LEFT JOIN Inscripciones i
+            LEFT JOIN inscripciones i
                 ON g.id_grupo = i.id_grupo
 
-            LEFT JOIN Sesiones s
+            LEFT JOIN sesiones s
                 ON g.id_grupo = s.id_grupo
 
             WHERE g.id_profesor = ?
@@ -278,15 +278,15 @@ const obtenerDashboardDocente = async (req, res) => {
                     0
                 ) AS permisos
 
-            FROM Sesiones s
+            FROM sesiones s
 
-            INNER JOIN Grupos g
+            INNER JOIN grupos g
                 ON s.id_grupo = g.id_grupo
 
-            INNER JOIN Materias m
+            INNER JOIN materias m
                 ON g.id_materia = m.id_materia
 
-            LEFT JOIN Asistencias a
+            LEFT JOIN asistencias a
                 ON s.id_sesion = a.id_sesion
 
             WHERE g.id_profesor = ?
@@ -326,12 +326,12 @@ const obtenerDashboardDocente = async (req, res) => {
 
                 COUNT(DISTINCT s.id_sesion) AS sesiones
 
-            FROM Grupos g
+            FROM grupos g
 
-            LEFT JOIN Inscripciones i
+            LEFT JOIN inscripciones i
                 ON g.id_grupo = i.id_grupo
 
-            LEFT JOIN Sesiones s
+            LEFT JOIN sesiones s
                 ON g.id_grupo = s.id_grupo
 
             WHERE g.id_profesor = ?
@@ -391,12 +391,12 @@ const obtenerDashboardDocente = async (req, res) => {
                     0
                 ) AS permisos
 
-            FROM Asistencias a
+            FROM asistencias a
 
-            INNER JOIN Sesiones s
+            INNER JOIN sesiones s
                 ON a.id_sesion = s.id_sesion
 
-            INNER JOIN Grupos g
+            INNER JOIN grupos g
                 ON s.id_grupo = g.id_grupo
 
             WHERE g.id_profesor = ?
@@ -460,15 +460,15 @@ const obtenerMateriasDocente = async (req, res) => {
 
                 COUNT(DISTINCT s.id_sesion) AS sesiones
 
-            FROM Grupos g
+            FROM grupos g
 
-            INNER JOIN Materias m
+            INNER JOIN materias m
                 ON g.id_materia = m.id_materia
 
-            LEFT JOIN Inscripciones i
+            LEFT JOIN inscripciones i
                 ON g.id_grupo = i.id_grupo
 
-            LEFT JOIN Sesiones s
+            LEFT JOIN sesiones s
                 ON g.id_grupo = s.id_grupo
 
             WHERE g.id_profesor = ?
@@ -582,15 +582,15 @@ const obtenerSesionesDocente = async (req, res) => {
                     0
                 ) AS permisos
 
-            FROM Sesiones s
+            FROM sesiones s
 
-            INNER JOIN Grupos g
+            INNER JOIN grupos g
                 ON s.id_grupo = g.id_grupo
 
-            INNER JOIN Materias m
+            INNER JOIN materias m
                 ON g.id_materia = m.id_materia
 
-            LEFT JOIN Asistencias a
+            LEFT JOIN asistencias a
                 ON s.id_sesion = a.id_sesion
 
             WHERE g.id_profesor = ?
@@ -663,9 +663,9 @@ const obtenerAsistenciasSesion = async (req, res) => {
 
                 e.correo_institucional
 
-            FROM Asistencias a
+            FROM asistencias a
 
-            INNER JOIN Estudiantes e
+            INNER JOIN estudiantes e
                 ON a.id_estudiante = e.id_estudiante
 
             WHERE a.id_sesion = ?
@@ -763,15 +763,15 @@ const obtenerReporteDocente = async (req, res) => {
                     0
                 ) AS permisos
 
-            FROM Grupos g
+            FROM grupos g
 
-            INNER JOIN Materias m
+            INNER JOIN materias m
                 ON g.id_materia = m.id_materia
 
-            INNER JOIN Sesiones s
+            INNER JOIN sesiones s
                 ON g.id_grupo = s.id_grupo
 
-            LEFT JOIN Asistencias a
+            LEFT JOIN asistencias a
                 ON s.id_sesion = a.id_sesion
 
             WHERE g.id_profesor = ?
@@ -817,7 +817,7 @@ const cancelarSesion = async (req, res) => {
         // Verificar que la sesión exista
         const [sesiones] = await db.query(
             `SELECT id_sesion, estado
-             FROM Sesiones
+             FROM sesiones
              WHERE id_sesion = ?`,
             [id_sesion]
         );
@@ -841,7 +841,7 @@ const cancelarSesion = async (req, res) => {
 
         // Cambiar estado
         await db.query(
-            `UPDATE Sesiones
+            `UPDATE sesiones
              SET estado = 'Cancelada'
              WHERE id_sesion = ?`,
             [id_sesion]
@@ -883,7 +883,7 @@ const finalizarSesion = async (req, res) => {
 
         const [sesiones] = await connection.query(
             `SELECT id_sesion, id_grupo, estado
-             FROM Sesiones
+             FROM sesiones
              WHERE id_sesion = ?`,
             [id_sesion]
         );
@@ -915,11 +915,11 @@ const finalizarSesion = async (req, res) => {
 
         const [estudiantes] = await connection.query(
             `SELECT i.id_estudiante
-             FROM Inscripciones i
+             FROM inscripciones i
              WHERE i.id_grupo = ?
              AND NOT EXISTS (
                  SELECT 1
-                 FROM Asistencias a
+                 FROM asistencias a
                  WHERE a.id_sesion = ?
                  AND a.id_estudiante = i.id_estudiante
              )`,
@@ -933,7 +933,7 @@ const finalizarSesion = async (req, res) => {
 
         for (const estudiante of estudiantes) {
             await connection.query(
-                `INSERT INTO Asistencias
+                `INSERT INTO asistencias
                     (
                         id_sesion,
                         id_estudiante,
@@ -951,7 +951,7 @@ const finalizarSesion = async (req, res) => {
         // 5- CAMBIAR SESIÓN A FINALIZADA
 
         await connection.query(
-            `UPDATE Sesiones
+            `UPDATE sesiones
              SET estado = 'Finalizada'
              WHERE id_sesion = ?`,
             [id_sesion]

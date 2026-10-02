@@ -26,7 +26,7 @@ const registrarAsistencia = async (req, res) => {
         s.hora_inicio,
         s.hora_fin,
         s.estado
-      FROM Sesiones s
+      FROM sesiones s
       WHERE s.id_sesion = ?
       `,
       [id_sesion]
@@ -59,7 +59,7 @@ const registrarAsistencia = async (req, res) => {
     const [estudiantes] = await db.query(
       `
       SELECT id_estudiante
-      FROM Estudiantes
+      FROM estudiantes
       WHERE id_estudiante = ?
       `,
       [id_estudiante]
@@ -77,7 +77,7 @@ const registrarAsistencia = async (req, res) => {
     const [inscripcion] = await db.query(
       `
       SELECT 1
-      FROM Inscripciones
+      FROM inscripciones
       WHERE id_estudiante = ?
         AND id_grupo = ?
       `,
@@ -96,7 +96,7 @@ const registrarAsistencia = async (req, res) => {
     const [asistenciaExistente] = await db.query(
       `
       SELECT id_asistencia
-      FROM Asistencias
+      FROM asistencias
       WHERE id_sesion = ?
         AND id_estudiante = ?
       `,
@@ -168,7 +168,7 @@ const registrarAsistencia = async (req, res) => {
     // 9. Registrar asistencia
     // ==========================================
     const queryInsert = `
-      INSERT INTO Asistencias (
+      INSERT INTO asistencias (
         id_sesion,
         id_estudiante,
         estado_asistencia,
@@ -431,8 +431,8 @@ const obtenerAsistenciasPorSesion = async (req, res) => {
         a.estado_asistencia,
         a.hora_marca,
         a.metodo_registro
-      FROM Asistencias a
-      INNER JOIN Estudiantes e ON a.id_estudiante = e.id_estudiante
+      FROM asistencias a
+      INNER JOIN estudiantes e ON a.id_estudiante = e.id_estudiante
       WHERE a.id_sesion = ?
       ORDER BY a.hora_marca ASC
     `;
@@ -456,7 +456,7 @@ const obtenerHistorialEstudiante = async (req, res) => {
 
   try {
     const [estudiantes] = await db.query(
-      'SELECT id_estudiante FROM Estudiantes WHERE id_estudiante = ?',
+      'SELECT id_estudiante FROM estudiantes WHERE id_estudiante = ?',
       [id_estudiante]
     );
 
@@ -474,10 +474,10 @@ const obtenerHistorialEstudiante = async (req, res) => {
         g.aula,
         a.estado_asistencia,
         a.metodo_registro
-      FROM Asistencias a
-      INNER JOIN Sesiones s ON a.id_sesion = s.id_sesion
-      INNER JOIN Grupos g ON s.id_grupo = g.id_grupo
-      INNER JOIN Materias m ON g.id_materia = m.id_materia
+      FROM asistencias a
+      INNER JOIN sesiones s ON a.id_sesion = s.id_sesion
+      INNER JOIN grupos g ON s.id_grupo = g.id_grupo
+      INNER JOIN materias m ON g.id_materia = m.id_materia
       WHERE a.id_estudiante = ?
       ORDER BY s.fecha DESC, a.hora_marca DESC, a.id_asistencia DESC
       LIMIT 5
@@ -502,7 +502,7 @@ const obtenerResumenEstudiante = async (req, res) => {
 
   try {
     const [estudiantes] = await db.query(
-      'SELECT id_estudiante FROM Estudiantes WHERE id_estudiante = ?',
+      'SELECT id_estudiante FROM estudiantes WHERE id_estudiante = ?',
       [id_estudiante]
     );
 
@@ -517,7 +517,7 @@ const obtenerResumenEstudiante = async (req, res) => {
         COUNT(CASE WHEN estado_asistencia = 'Tardanza' THEN 1 END) AS tardanzas,
         COUNT(CASE WHEN estado_asistencia = 'Ausente' THEN 1 END) AS ausentes,
         COUNT(CASE WHEN estado_asistencia = 'Permiso' THEN 1 END) AS permisos
-      FROM Asistencias
+      FROM asistencias
       WHERE id_estudiante = ?
     `;
 
@@ -547,7 +547,7 @@ const obtenerMateriasResumen = async (req, res) => {
 
   try {
     const [estudiantes] = await db.query(
-      'SELECT id_estudiante FROM Estudiantes WHERE id_estudiante = ?',
+      'SELECT id_estudiante FROM estudiantes WHERE id_estudiante = ?',
       [id_estudiante]
     );
 
@@ -584,12 +584,12 @@ const obtenerMateriasResumen = async (req, res) => {
          END
         ) AS cantidad_inasistencias
 
-      FROM Estudiantes e
-      INNER JOIN Inscripciones i ON e.id_estudiante = i.id_estudiante
-      INNER JOIN Grupos g ON i.id_grupo = g.id_grupo
-      INNER JOIN Materias m ON g.id_materia = m.id_materia
-      INNER JOIN Sesiones s ON g.id_grupo = s.id_grupo
-      LEFT JOIN Asistencias a ON s.id_sesion = a.id_sesion AND a.id_estudiante = e.id_estudiante
+      FROM estudiantes e
+      INNER JOIN inscripciones i ON e.id_estudiante = i.id_estudiante
+      INNER JOIN grupos g ON i.id_grupo = g.id_grupo
+      INNER JOIN materias m ON g.id_materia = m.id_materia
+      INNER JOIN sesiones s ON g.id_grupo = s.id_grupo
+      LEFT JOIN asistencias a ON s.id_sesion = a.id_sesion AND a.id_estudiante = e.id_estudiante
 
       WHERE e.id_estudiante = ?
 
