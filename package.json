@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:api": "node api/index.js",
     "lint": "eslint",
     "verify:api": "node scripts/verify-api.js"
   },

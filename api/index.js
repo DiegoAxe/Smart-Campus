@@ -22,25 +22,25 @@ app.get('/api/health', async (req, res) => {
          AND TABLE_NAME IN (?, ?, ?, ?, ?, ?, ?)`,
       [
         process.env.DB_NAME,
-        'Profesores',
-        'Estudiantes',
-        'Materias',
-        'Grupos',
-        'Inscripciones',
-        'Sesiones',
-        'Asistencias'
+        'profesores',
+        'estudiantes',
+        'materias',
+        'grupos',
+        'inscripciones',
+        'sesiones',
+        'asistencias'
       ]
     );
 
     const tablasEncontradas = tablas.map((tabla) => tabla.TABLE_NAME);
     const tablasFaltantes = [
-      'Profesores',
-      'Estudiantes',
-      'Materias',
-      'Grupos',
-      'Inscripciones',
-      'Sesiones',
-      'Asistencias'
+      'profesores',
+      'estudiantes',
+      'materias',
+      'grupos',
+      'inscripciones',
+      'sesiones',
+      'asistencias'
     ].filter((tabla) => !tablasEncontradas.includes(tabla));
 
     if (tablasFaltantes.length > 0) {
@@ -73,8 +73,8 @@ app.use('/api/asistencias', asistenciasRoutes);
 app.use('/api/docente', docenteRoutes);
 app.use("/api/asistente", asistenteRoutes);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Servidor listo y corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor listo y corriendo en puerto: ${PORT}`);
 });
