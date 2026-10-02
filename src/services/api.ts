@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001/api";
+const API_URL = "https://smart-campus-26.up.railway.app/api";
 
 import type { LoginResponse } from "../types/usuario";
 import type { EstudianteAsistencia } from "../types/estudianteAsistencias";
