@@ -110,18 +110,53 @@ const registrarAsistencia = async (req, res) => {
     }
 
     // ==========================================
-    // 6. Calcular fecha y hora actual
+    // 6. Obtener fecha y hora actual de El Salvador
     // ==========================================
+
     const ahora = new Date();
 
-    // Fecha actual en formato YYYY-MM-DD
-    const fechaActual = ahora.toISOString().split('T')[0];
+    const partesHoraSV = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/El_Salvador',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).formatToParts(ahora);
+
+    const obtenerParte = (tipo) =>
+      partesHoraSV.find((parte) => parte.type === tipo)?.value;
+
+    const anioSV = obtenerParte('year');
+    const mesSV = obtenerParte('month');
+    const diaSV = obtenerParte('day');
+    const horaSV = obtenerParte('hour');
+    const minutoSV = obtenerParte('minute');
+    const segundoSV = obtenerParte('second');
+
+    const fechaActual = `${anioSV}-${mesSV}-${diaSV}`;
+
+    const horaActual = `${horaSV}:${minutoSV}:${segundoSV}`;
+
+    // ==========================================
+    // 7. Obtener la fecha de la sesión
+    // ==========================================
+
+    // MySQL normalmente devuelve DATE como string:
+    // YYYY-MM-DD
+    const fechaSesion =
+      sesion.fecha instanceof Date
+        ? new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/El_Salvador',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).format(sesion.fecha)
+        : String(sesion.fecha).split('T')[0];
 
     // Verificar que la sesión corresponda al día actual
-    const fechaSesion = new Date(sesion.fecha)
-      .toISOString()
-      .split('T')[0];
-
     if (fechaActual !== fechaSesion) {
       return res.status(400).json({
         error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
@@ -129,31 +164,49 @@ const registrarAsistencia = async (req, res) => {
     }
 
     // ==========================================
-    // 7. Construir fecha/hora de inicio y fin
+    // 8. Convertir las horas de la sesión
+    //    a segundos para hacer las comparaciones
     // ==========================================
-    const inicioSesion = new Date(
-      `${fechaSesion}T${sesion.hora_inicio}`
-    );
 
-    const finSesion = new Date(
-      `${fechaSesion}T${sesion.hora_fin}`
-    );
+    const convertirHoraASegundos = (hora) => {
+      const [horas, minutos, segundos = 0] =
+        String(hora).split(':').map(Number);
 
-    // 15 minutos después de comenzar
-    const limitePresente = new Date(
-      inicioSesion.getTime() + 15 * 60 * 1000
-    );
+      return (
+        horas * 3600 +
+        minutos * 60 +
+        segundos
+      );
+    };
+
+    const segundosActual = convertirHoraASegundos(horaActual);
+    const segundosInicio = convertirHoraASegundos(sesion.hora_inicio);
+    const segundosFin = convertirHoraASegundos(sesion.hora_fin);
 
     // ==========================================
-    // 8. Determinar estado de asistencia
+    // 9. Calcular límite para estar "Presente"
     // ==========================================
+
+    // 15 minutos después de la hora de inicio
+    const limitePresente = segundosInicio + (15 * 60);
+
+    // ==========================================
+    // 10. Determinar estado de asistencia
+    // ==========================================
+
     let estadoAsistencia;
 
-    if (ahora >= inicioSesion && ahora <= limitePresente) {
+    if (
+      segundosActual >= segundosInicio &&
+      segundosActual <= limitePresente
+    ) {
       // Desde la hora de inicio hasta 15 minutos después
       estadoAsistencia = 'Presente';
 
-    } else if (ahora > limitePresente && ahora < finSesion) {
+    } else if (
+      segundosActual > limitePresente &&
+      segundosActual < segundosFin
+    ) {
       // Después de los 15 minutos pero antes de finalizar
       estadoAsistencia = 'Tardanza';
 
@@ -165,8 +218,13 @@ const registrarAsistencia = async (req, res) => {
     }
 
     // ==========================================
-    // 9. Registrar asistencia
+    // 11. Registrar asistencia
     // ==========================================
+
+    // Se envía explícitamente la fecha y hora de
+    // El Salvador en lugar de utilizar NOW().
+    const fechaHoraMarca = `${fechaActual} ${horaActual}`;
+
     const queryInsert = `
       INSERT INTO asistencias (
         id_sesion,
@@ -175,18 +233,20 @@ const registrarAsistencia = async (req, res) => {
         hora_marca,
         metodo_registro
       )
-      VALUES (?, ?, ?, NOW(), 'QR')
+      VALUES (?, ?, ?, ?, 'QR')
     `;
 
     await db.query(queryInsert, [
       id_sesion,
       id_estudiante,
-      estadoAsistencia
+      estadoAsistencia,
+      fechaHoraMarca
     ]);
 
     // ==========================================
-    // 10. Respuesta
+    // 12. Respuesta
     // ==========================================
+
     return res.status(201).json({
       mensaje: 'Asistencia registrada correctamente',
       datos: {
@@ -194,7 +254,8 @@ const registrarAsistencia = async (req, res) => {
         id_estudiante,
         estado_asistencia: estadoAsistencia,
         metodo_registro: 'QR',
-        hora_marca: ahora
+        hora_marca: fechaHoraMarca,
+        zona_horaria: 'America/El_Salvador'
       }
     });
 
@@ -221,7 +282,7 @@ const registrarAsistencia = async (req, res) => {
     });
   }
 };
-
+```
 // 2. Hacer el proceso de Login de un estudiante o docente, dependiendo si es el carnet o correo institucional
 const procesoLogin = async (req, res) => {
   const { texto_correo, contrasena } = req.body;
@@ -574,7 +635,7 @@ const obtenerMateriasResumen = async (req, res) => {
           ORDER BY DAYOFWEEK(s.fecha) SEPARATOR '-'
         ) AS dias_semana,
 
-        s.hora_inicio AS hora_inicio,
+        MIN(s.hora_inicio) AS hora_inicio,
         g.aula AS aula,
         COUNT(a.id_asistencia) AS total_sesiones,
         SUM(
@@ -595,7 +656,7 @@ const obtenerMateriasResumen = async (req, res) => {
 
       GROUP BY
           e.id_estudiante, e.nombres, e.apellidos, g.id_grupo,
-          g.numero_grupo, m.nombre_materia, g.aula, s.hora_inicio
+          g.numero_grupo, m.nombre_materia, g.aula
       ORDER BY m.nombre_materia
       `;
 

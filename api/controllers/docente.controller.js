@@ -938,9 +938,9 @@ const finalizarSesion = async (req, res) => {
                         id_sesion,
                         id_estudiante,
                         estado_asistencia,
-                        metodo_registro
+                        metodo_registro, hora_marca
                     )
-                 VALUES (?, ?, 'Ausente', 'Sistema')`,
+                 VALUES (?, ?, 'Ausente', 'Sistema', null)`,
                 [
                     id_sesion,
                     estudiante.id_estudiante

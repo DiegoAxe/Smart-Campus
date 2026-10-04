@@ -340,7 +340,7 @@ export default function SesionesDocente() {
                 // =====================================================
 
                 const url =
-                    `http://localhost:3001/api/docente/dashboard/${idProfesor}`;
+                    `https://smart-campus-26.up.railway.app/api/docente/dashboard/${idProfesor}`;
 
                 console.log("CONSULTANDO:", url);
 
