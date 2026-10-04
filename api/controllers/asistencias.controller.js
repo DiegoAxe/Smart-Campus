@@ -595,7 +595,7 @@ const obtenerMateriasResumen = async (req, res) => {
 
       GROUP BY
           e.id_estudiante, e.nombres, e.apellidos, g.id_grupo,
-          g.numero_grupo, m.nombre_materia, g.aula, s.hora_inicio
+          g.numero_grupo, m.nombre_materia, g.aula
       ORDER BY m.nombre_materia
       `;
 
