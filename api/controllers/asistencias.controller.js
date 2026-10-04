@@ -6,17 +6,19 @@ const jwt = require("jsonwebtoken");
 const registrarAsistencia = async (req, res) => {
   const { id_sesion, id_estudiante } = req.body;
 
-  // Verificar datos obligatorios
+  // =====================================================
+  // 0. Verificar datos obligatorios
+  // =====================================================
   if (!id_sesion || !id_estudiante) {
     return res.status(400).json({
-      error: 'Se requieren el id_sesion y el id_estudiante'
+      error: 'Faltan datos: se requieren id_sesion e id_estudiante'
     });
   }
 
   try {
-    // ==========================================
+    // =====================================================
     // 1. Buscar la sesión
-    // ==========================================
+    // =====================================================
     const [sesiones] = await db.query(
       `
       SELECT
@@ -32,30 +34,32 @@ const registrarAsistencia = async (req, res) => {
       [id_sesion]
     );
 
-    // La sesión no existe
     if (sesiones.length === 0) {
       return res.status(404).json({
-        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
+        error: `La sesión con id ${id_sesion} no existe`
       });
     }
 
     const sesion = sesiones[0];
 
-    // ==========================================
+    // =====================================================
     // 2. Verificar estado de la sesión
-    // ==========================================
-    if (
-      sesion.estado === 'Finalizada' ||
-      sesion.estado === 'Cancelada'
-    ) {
+    // =====================================================
+    if (sesion.estado === 'Finalizada') {
       return res.status(400).json({
-        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
+        error: 'La sesión ya está finalizada'
       });
     }
 
-    // ==========================================
+    if (sesion.estado === 'Cancelada') {
+      return res.status(400).json({
+        error: 'La sesión está cancelada'
+      });
+    }
+
+    // =====================================================
     // 3. Verificar que el estudiante exista
-    // ==========================================
+    // =====================================================
     const [estudiantes] = await db.query(
       `
       SELECT id_estudiante
@@ -67,13 +71,13 @@ const registrarAsistencia = async (req, res) => {
 
     if (estudiantes.length === 0) {
       return res.status(404).json({
-        error: 'El estudiante ingresado no existe en la base de datos'
+        error: `El estudiante con id ${id_estudiante} no existe`
       });
     }
 
-    // ==========================================
+    // =====================================================
     // 4. Verificar inscripción al grupo
-    // ==========================================
+    // =====================================================
     const [inscripcion] = await db.query(
       `
       SELECT 1
@@ -86,13 +90,13 @@ const registrarAsistencia = async (req, res) => {
 
     if (inscripcion.length === 0) {
       return res.status(400).json({
-        error: 'El estudiante no está inscrito en este grupo'
+        error: `El estudiante ${id_estudiante} no está inscrito en el grupo ${sesion.id_grupo}`
       });
     }
 
-    // ==========================================
+    // =====================================================
     // 5. Verificar si ya registró asistencia
-    // ==========================================
+    // =====================================================
     const [asistenciaExistente] = await db.query(
       `
       SELECT id_asistencia
@@ -105,68 +109,158 @@ const registrarAsistencia = async (req, res) => {
 
     if (asistenciaExistente.length > 0) {
       return res.status(409).json({
-        error: 'El estudiante ya tiene asistencia registrada en esta sesión'
+        error: `El estudiante ${id_estudiante} ya tiene una asistencia registrada para la sesión ${id_sesion}`
       });
     }
 
-    // ==========================================
-    // 6. Calcular fecha y hora actual
-    // ==========================================
+    // =====================================================
+    // 6. Obtener fecha y hora ACTUAL de El Salvador
+    // =====================================================
     const ahora = new Date();
 
-    // Fecha actual en formato YYYY-MM-DD
-    const fechaActual = ahora.toISOString().split('T')[0];
+    const partesSV = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/El_Salvador',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      hourCycle: 'h23'
+    }).formatToParts(ahora);
 
-    // Verificar que la sesión corresponda al día actual
-    const fechaSesion = new Date(sesion.fecha)
-      .toISOString()
-      .split('T')[0];
+    const obtenerParte = (tipo) =>
+      partesSV.find((parte) => parte.type === tipo)?.value;
 
+    const anioActual = obtenerParte('year');
+    const mesActual = obtenerParte('month');
+    const diaActual = obtenerParte('day');
+    const horaActual = obtenerParte('hour');
+    const minutoActual = obtenerParte('minute');
+    const segundoActual = obtenerParte('second');
+
+    const fechaActual =
+      `${anioActual}-${mesActual}-${diaActual}`;
+
+    const horaActualTexto =
+      `${horaActual}:${minutoActual}:${segundoActual}`;
+
+    // =====================================================
+    // 7. Obtener correctamente la fecha de la sesión
+    // =====================================================
+    let fechaSesion;
+
+    if (sesion.fecha instanceof Date) {
+      // Si mysql2 la devuelve como Date, usamos UTC
+      // para evitar que el servidor nos cambie el día.
+      const anio = sesion.fecha.getUTCFullYear();
+      const mes = String(sesion.fecha.getUTCMonth() + 1).padStart(2, '0');
+      const dia = String(sesion.fecha.getUTCDate()).padStart(2, '0');
+
+      fechaSesion = `${anio}-${mes}-${dia}`;
+    } else {
+      fechaSesion = String(sesion.fecha).split('T')[0];
+    }
+
+    // =====================================================
+    // 8. Verificar que sea el mismo día
+    // =====================================================
     if (fechaActual !== fechaSesion) {
       return res.status(400).json({
-        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
+        error: 'La sesión no corresponde al día actual',
+        detalles: {
+          fecha_sesion: fechaSesion,
+          fecha_actual_El_Salvador: fechaActual
+        }
       });
     }
 
-    // ==========================================
-    // 7. Construir fecha/hora de inicio y fin
-    // ==========================================
-    const inicioSesion = new Date(
-      `${fechaSesion}T${sesion.hora_inicio}`
-    );
+    // =====================================================
+    // 9. Convertir una hora HH:mm:ss a segundos
+    // =====================================================
+    const convertirHoraASegundos = (hora) => {
+      const textoHora = String(hora);
 
-    const finSesion = new Date(
-      `${fechaSesion}T${sesion.hora_fin}`
-    );
+      const [horas, minutos, segundos = 0] =
+        textoHora.split(':').map(Number);
 
-    // 15 minutos después de comenzar
-    const limitePresente = new Date(
-      inicioSesion.getTime() + 15 * 60 * 1000
-    );
+      return (
+        (horas * 3600) +
+        (minutos * 60) +
+        segundos
+      );
+    };
 
-    // ==========================================
-    // 8. Determinar estado de asistencia
-    // ==========================================
+    const segundosActual =
+      convertirHoraASegundos(horaActualTexto);
+
+    const segundosInicio =
+      convertirHoraASegundos(sesion.hora_inicio);
+
+    const segundosFin =
+      convertirHoraASegundos(sesion.hora_fin);
+
+    // =====================================================
+    // 10. Validar horario de la sesión
+    // =====================================================
+
+    // Configuración inválida de la sesión
+    if (segundosInicio >= segundosFin) {
+      return res.status(500).json({
+        error: 'La sesión tiene un horario inválido',
+        detalles: {
+          hora_inicio: sesion.hora_inicio,
+          hora_fin: sesion.hora_fin
+        }
+      });
+    }
+
+    // 15 minutos después del inicio
+    const limitePresente =
+      segundosInicio + (15 * 60);
+
+    // Antes de comenzar
+    if (segundosActual < segundosInicio) {
+      return res.status(400).json({
+        error: 'La sesión todavía no ha comenzado',
+        detalles: {
+          hora_actual_El_Salvador: horaActualTexto,
+          hora_inicio: sesion.hora_inicio,
+          hora_fin: sesion.hora_fin
+        }
+      });
+    }
+
+    // Después de finalizar
+    if (segundosActual >= segundosFin) {
+      return res.status(400).json({
+        error: 'La sesión ya terminó',
+        detalles: {
+          hora_actual_El_Salvador: horaActualTexto,
+          hora_inicio: sesion.hora_inicio,
+          hora_fin: sesion.hora_fin
+        }
+      });
+    }
+
+    // =====================================================
+    // 11. Determinar estado de asistencia
+    // =====================================================
     let estadoAsistencia;
 
-    if (ahora >= inicioSesion && ahora <= limitePresente) {
-      // Desde la hora de inicio hasta 15 minutos después
+    if (segundosActual <= limitePresente) {
       estadoAsistencia = 'Presente';
-
-    } else if (ahora > limitePresente && ahora < finSesion) {
-      // Después de los 15 minutos pero antes de finalizar
-      estadoAsistencia = 'Tardanza';
-
     } else {
-      // Antes de iniciar o después de finalizar
-      return res.status(400).json({
-        error: 'Sesion finalizada o inexistente. Sea mas puntual la proxima vez'
-      });
+      estadoAsistencia = 'Tardanza';
     }
 
-    // ==========================================
-    // 9. Registrar asistencia
-    // ==========================================
+    // =====================================================
+    // 12. Guardar hora de El Salvador
+    // =====================================================
+    const fechaHoraMarca =
+      `${fechaActual} ${horaActualTexto}`;
+
     const queryInsert = `
       INSERT INTO asistencias (
         id_sesion,
@@ -175,18 +269,19 @@ const registrarAsistencia = async (req, res) => {
         hora_marca,
         metodo_registro
       )
-      VALUES (?, ?, ?, NOW(), 'QR')
+      VALUES (?, ?, ?, ?, 'QR')
     `;
 
     await db.query(queryInsert, [
       id_sesion,
       id_estudiante,
-      estadoAsistencia
+      estadoAsistencia,
+      fechaHoraMarca
     ]);
 
-    // ==========================================
-    // 10. Respuesta
-    // ==========================================
+    // =====================================================
+    // 13. Respuesta exitosa
+    // =====================================================
     return res.status(201).json({
       mensaje: 'Asistencia registrada correctamente',
       datos: {
@@ -194,30 +289,37 @@ const registrarAsistencia = async (req, res) => {
         id_estudiante,
         estado_asistencia: estadoAsistencia,
         metodo_registro: 'QR',
-        hora_marca: ahora
+        hora_marca: fechaHoraMarca,
+        zona_horaria: 'America/El_Salvador'
       }
     });
 
   } catch (error) {
 
+    // =====================================================
+    // Errores específicos de MySQL
+    // =====================================================
+
     // Registro duplicado
     if (error.errno === 1062) {
       return res.status(409).json({
-        error: 'El estudiante ya tiene asistencia registrada en esta sesión'
+        error: 'El estudiante ya tiene registrada una asistencia para esta sesión'
       });
     }
 
-    // Problema con FK
+    // Error de clave foránea
     if (error.errno === 1452) {
       return res.status(404).json({
-        error: 'El estudiante o la sesión ingresada no existe'
+        error: 'Error de integridad: el estudiante, grupo o sesión no existe en una tabla relacionada'
       });
     }
 
+    // Otros errores
     console.error('Error al registrar asistencia:', error);
 
     return res.status(500).json({
-      error: 'Error interno del servidor'
+      error: 'Error interno del servidor al registrar la asistencia',
+      detalle: error.message
     });
   }
 };
